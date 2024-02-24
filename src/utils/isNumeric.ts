@@ -1,0 +1,1 @@
+export default (str: string) => str.charCodeAt(0) >= '0'.charCodeAt(0) && str.charCodeAt(0) <= '9'.charCodeAt(0);

@@ -1,0 +1,1 @@
+export default () => window.navigator.userAgent.includes('OPR') || window.navigator.userAgent.includes("Opera");

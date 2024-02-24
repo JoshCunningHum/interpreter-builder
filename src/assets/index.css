@@ -1,0 +1,11 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.text-muted {
+    @apply text-neutral-600;
+}
+
+.text-hint {
+    @apply text-neutral-400;
+}

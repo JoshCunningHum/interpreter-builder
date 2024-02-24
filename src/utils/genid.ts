@@ -1,0 +1,1 @@
+export default (length: number = 8) => Math.random().toString(36).slice(2, length + 2);
