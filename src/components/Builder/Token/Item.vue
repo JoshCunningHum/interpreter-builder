@@ -8,18 +8,23 @@ import { sanitizeJS } from "@/utils/sanitizeJS";
 import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { useQuasar } from "quasar";
-import { computed, ref, toRefs } from "vue";
+import { computed, ref, toRefs, watch } from "vue";
 
 const props = defineProps<{
   def: TokenDef;
   index: number;
+  collapse?: number;
+}>();
+
+const emit = defineEmits<{
+  (e: "collapseReset"): void;
 }>();
 
 const q = useQuasar();
 const tokenStore = useTokenStore();
 
 const { tokens } = storeToRefs(tokenStore);
-const { def: token } = toRefs(props);
+const { def: token, collapse: collapseSignal } = toRefs(props);
 
 const remove = () => {
   q.dialog({
@@ -59,13 +64,32 @@ ${isFirefox() ? `  at ${err.lineNumber}:${err.columnNumber}` : ""}`;
   }
   return "";
 });
+
+// Collapsible
+const isCollapsed = ref(false);
+const collapsedComponent = ref<InstanceType<typeof HTMLDivElement>>();
+const collapsedHeight = computed(
+  () => collapsedComponent.value?.scrollHeight || 0,
+);
+
+const collapse = () => set(isCollapsed, true);
+const expand = () => set(isCollapsed, false);
+
+watch(collapseSignal, (s) => {
+  if (!s) return;
+
+  if (s > 0) expand();
+  else if (s < 0) collapse();
+});
+
+const toggleCollapse = () => {
+  set(isCollapsed, !get(isCollapsed));
+  emit("collapseReset");
+};
 </script>
 
 <template>
-  <q-card
-    flat
-    class="mb-4"
-  >
+  <q-card flat>
     <q-item class="bg-primary">
       <q-item-section
         side
@@ -75,29 +99,38 @@ ${isFirefox() ? `  at ${err.lineNumber}:${err.columnNumber}` : ""}`;
       </q-item-section>
       <q-item-section>
         <p
-          class="text-subtitle2"
+          class="text-subtitle2 flex items-center gap-4"
           :class="[!token.name && 'text-muted']"
         >
-          {{ token.name || "Assign a token name" }}
-          <q-popup-edit
-            square
-            v-model="token.name"
-            #default="scope"
-          >
-            <q-input
-              color="amber"
-              label="Token name"
-              hint="Press enter to apply changes"
-              v-model="scope.value"
-              dense
-              autofocus
-              @keyup.enter="scope.set"
+          <q-icon
+            :name="`mdi-chevron-${isCollapsed ? 'down' : 'up'}`"
+            size="sm"
+            class="cursor-pointer"
+            @click="toggleCollapse"
+          />
+          <span>
+            {{ token.name || "Assign a token name" }}
+
+            <q-popup-edit
+              square
+              v-model="token.name"
+              #default="scope"
             >
-              <template #prepend>
-                <q-icon name="mdi-pencil" />
-              </template>
-            </q-input>
-          </q-popup-edit>
+              <q-input
+                color="amber"
+                label="Token name"
+                hint="Press enter to apply changes"
+                v-model="scope.value"
+                dense
+                autofocus
+                @keyup.enter="scope.set"
+              >
+                <template #prepend>
+                  <q-icon name="mdi-pencil" />
+                </template>
+              </q-input>
+            </q-popup-edit>
+          </span>
         </p>
       </q-item-section>
       <q-item-section
@@ -125,18 +158,24 @@ ${isFirefox() ? `  at ${err.lineNumber}:${err.columnNumber}` : ""}`;
       </q-item-section>
     </q-item>
 
-    <div v-if="mode === Mode.Edit">
-      <CMEditorJS v-model="token.match" />
-    </div>
-    <div v-else>
-      <CMEditorCode v-model="testSrc" />
-      <div class="bg-primary px-4 py-2 font-mono">
-        <div class="text-xs">Result:</div>
-        <pre
-          class="pl-2"
-          :class="[___isError___ && 'text-red']"
-          >{{ testResult }}</pre
-        >
+    <div
+      ref="collapsedComponent"
+      class="overflow-hidden transition-all"
+      :style="`max-height: ${isCollapsed ? 0 : collapsedHeight}px;`"
+    >
+      <div v-if="mode === Mode.Edit">
+        <CMEditorJS v-model="token.match" />
+      </div>
+      <div v-else>
+        <CMEditorCode v-model="testSrc" />
+        <div class="bg-primary px-4 py-2 font-mono">
+          <div class="text-xs">Result:</div>
+          <pre
+            class="pl-2"
+            :class="[___isError___ && 'text-red']"
+            >{{ testResult }}</pre
+          >
+        </div>
       </div>
     </div>
   </q-card>

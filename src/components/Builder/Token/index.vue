@@ -2,9 +2,9 @@
 import { useTokenStore } from "@/stores/token";
 import type { TokenDef } from "@/types/Token";
 import genidnum from "@/utils/genidnum";
-import { get } from "@vueuse/core";
+import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
-import { onMounted } from "vue";
+import { onMounted, ref } from "vue";
 import draggable from "vuedraggable";
 import Item from "./Item.vue";
 
@@ -28,6 +28,10 @@ const add = () => {
 onMounted(() => {
   emit("initializeAddHook", add);
 });
+
+// Toggling collapse and expand for all items
+const collapseSignal = ref(0);
+const collapseReset = () => set(collapseSignal, 0);
 </script>
 
 <template>
@@ -39,11 +43,23 @@ onMounted(() => {
       <div class="text-h5 text-muted select-none">No Token Definitions</div>
     </div>
     <template v-else>
-      <div class="text-hint text-caption pb-4">
-        Do note that escaping characters requires 2 backward slashes.
+      <div class="flex justify-between pb-4">
+        <span class="text-hint text-caption">
+          Do note that escaping characters requires 2 backward slashes.
+        </span>
+        <div class="flex gap-2">
+          <q-btn
+            @click="
+              collapseSignal =
+                collapseSignal === -1 ? 1 : collapseSignal === 0 ? 1 : -1
+            "
+            >{{ collapseSignal === -1 ? "Expand" : "Collapse" }} All</q-btn
+          >
+        </div>
       </div>
       <q-scroll-area class="flex-grow">
         <draggable
+          class="flex flex-col gap-4"
           v-model="tokens"
           item-key="id"
           :animation="200"
@@ -61,6 +77,8 @@ onMounted(() => {
             }"
           >
             <Item
+              :collapse="collapseSignal"
+              @collapseReset="collapseReset"
               :def="t"
               :key="t.id"
               :index="i"
