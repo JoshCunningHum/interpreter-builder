@@ -1,5 +1,5 @@
 import type { Token } from "@/types/Token";
-import type { ASTNode, ASTNodeType, ParseRules } from "@/types/Node"
+import type { ASTNode, ASTNodeType, ParseRule } from "@/types/Node"
 
 interface ASTRuntime {
     tokenIndex: number;

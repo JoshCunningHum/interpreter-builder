@@ -9,7 +9,8 @@ export interface ASTNode {
     data: Record<string, any>;
 }
 
-export interface ParseRules {
+export interface ParseRule {
+    id: number;
     name: string;
     match: string;
     mapper: string;

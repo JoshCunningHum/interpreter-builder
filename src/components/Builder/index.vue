@@ -47,11 +47,13 @@ const onAdd = () => {
         :name="i"
         class="flex w-full"
       >
-        <component
-          :is="t"
-          @initializeAddHook="(func: () => void) => (addHookFunc = func)"
-          class="flex-grow"
-        />
+        <keep-alive>
+          <component
+            :is="t"
+            @initializeAddHook="(func: () => void) => (addHookFunc = func)"
+            class="flex-grow"
+          />
+        </keep-alive>
       </q-tab-panel>
     </q-tab-panels>
   </div>

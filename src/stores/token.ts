@@ -20,11 +20,17 @@ export const useTokenStore = defineStore("token", () => {
         localStorage
     )
 
+    const TokenEnum = computed(() => tokens.value.reduce((acc, token) => {
+        acc[token.name] = token.id;
+        return acc;
+    }, {} as Record<string, number>));
+
     return {
         tokens,
         tokensSorted,
 
-        reserves
+        reserves,
+        TokenEnum
     }
 })
 

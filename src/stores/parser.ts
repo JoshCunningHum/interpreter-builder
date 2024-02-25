@@ -1,4 +1,4 @@
-import type { ParseRules } from "@/types/Node";
+import type { ParseRule } from "@/types/Node";
 import type { Token } from "@/types/Token";
 import { get, useStorage } from "@vueuse/core"
 import { defineStore, acceptHMRUpdate } from "pinia"
@@ -13,7 +13,7 @@ export const useParserStore = defineStore("parser", () => {
 
     const parseRules = useStorage(
         'ib-parse-rules',
-        new Array<ParseRules>(),
+        new Array<ParseRule>(),
         localStorage
     );
 
