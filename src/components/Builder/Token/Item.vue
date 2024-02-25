@@ -99,22 +99,20 @@ const toggleCollapse = () => {
         <q-icon name="mdi-reorder-horizontal" />
       </q-item-section>
       <q-item-section>
-        <p
-          class="text-subtitle2 flex items-center gap-4"
-          :class="[!token.name && 'text-muted']"
-        >
+        <p class="text-subtitle2 flex items-center gap-4">
           <q-icon
             :name="`mdi-chevron-${isCollapsed ? 'down' : 'up'}`"
             size="sm"
             class="cursor-pointer"
             @click="toggleCollapse"
           />
-          <span>
+          <span :class="[!token.name && 'text-muted']">
             {{ token.name || "Assign a token name" }}
 
             <q-popup-edit
               square
-              v-model="token.name"
+              @save="(v) => (token.name = v.replace(' ', '_'))"
+              :model-value="token.name"
               #default="scope"
             >
               <q-input

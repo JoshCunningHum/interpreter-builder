@@ -53,7 +53,8 @@ const remove = () => {
           <q-popup-edit
             square
             cover
-            v-model="reserve.value"
+            :model-value="reserve.value"
+            @save="(v) => (reserve.value = v.replace(' ', '_'))"
             #default="scope"
           >
             <q-input
