@@ -4,7 +4,7 @@ import type { TokenDef } from "@/types/Token";
 import genidnum from "@/utils/genidnum";
 import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
-import { onMounted, ref } from "vue";
+import { defineAsyncComponent, onMounted, ref } from "vue";
 import draggable from "vuedraggable";
 import Item from "./Item.vue";
 
@@ -32,6 +32,9 @@ onMounted(() => {
 // Toggling collapse and expand for all items
 const collapseSignal = ref(1);
 const collapseReset = () => set(collapseSignal, 0);
+
+// Lazy Load Item Component
+const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
 </script>
 
 <template>
@@ -77,7 +80,7 @@ const collapseReset = () => set(collapseSignal, 0);
               index: number;
             }"
           >
-            <Item
+            <LazyItem
               :collapse="collapseSignal"
               @collapseReset="collapseReset"
               :def="t"
