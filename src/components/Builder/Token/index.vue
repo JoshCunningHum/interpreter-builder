@@ -30,7 +30,7 @@ onMounted(() => {
 });
 
 // Toggling collapse and expand for all items
-const collapseSignal = ref(0);
+const collapseSignal = ref(1);
 const collapseReset = () => set(collapseSignal, 0);
 </script>
 
@@ -45,8 +45,9 @@ const collapseReset = () => set(collapseSignal, 0);
     <template v-else>
       <div class="flex justify-between pb-4">
         <span class="text-hint text-caption">
-          Do note that escaping characters requires 2 backward slashes.
+          <!-- TODO: Somethere Here-->
         </span>
+
         <div class="flex gap-2">
           <q-btn
             @click="

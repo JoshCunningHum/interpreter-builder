@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import CMEditorCode from "@/components/CMEditorCode.vue";
 import CMEditorJS from "@/components/CMEditorJS.vue";
+import JSEvaluator from "@/components/JSEvaluator.vue";
 import { useTokenStore } from "@/stores/token";
 import type { TokenDef } from "@/types/Token";
 import isFirefox from "@/utils/isFirefox";
 import { sanitizeJS } from "@/utils/sanitizeJS";
-import { get, set } from "@vueuse/core";
+import { get, set, useMutationObserver, watchImmediate } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { useQuasar } from "quasar";
 import { computed, ref, toRefs, watch } from "vue";
@@ -45,31 +46,31 @@ enum Mode {
 }
 
 const mode = ref(Mode.Edit);
-
 const testSrc = ref<string>("");
-
-const ___isError___ = ref(false);
-const testResult = computed<string>(() => {
-  const ___sanitized____ = sanitizeJS(token.value.match);
-  const args = [testSrc.value, testSrc.value];
-  set(___isError___, false);
-  try {
-    // console.log(args, ___sanitized____);
-    return eval(token.value.match);
-  } catch (err: any) {
-    set(___isError___, true);
-
-    return `${err}
-${isFirefox() ? `  at ${err.lineNumber}:${err.columnNumber}` : ""}`;
-  }
-  return "";
-});
 
 // Collapsible
 const isCollapsed = ref(false);
 const collapsedComponent = ref<InstanceType<typeof HTMLDivElement>>();
-const collapsedHeight = computed(
-  () => collapsedComponent.value?.scrollHeight || 0,
+const collapsedHeight = ref(9999);
+
+// useMutationObserver(
+//   collapsedComponent,
+//   () => {
+//     const sch = collapsedComponent.value?.scrollHeight;
+//     if (!sch) return;
+//     set(collapsedHeight, sch);
+//   },
+//   { attributes: true, childList: true },
+// );
+
+watch(
+  [testSrc, () => token.value.match, isCollapsed],
+  () => {
+    const sch = collapsedComponent.value?.scrollHeight;
+    if (!sch) return;
+    set(collapsedHeight, sch);
+  },
+  { immediate: true },
 );
 
 const collapse = () => set(isCollapsed, true);
@@ -168,14 +169,10 @@ const toggleCollapse = () => {
       </div>
       <div v-else>
         <CMEditorCode v-model="testSrc" />
-        <div class="bg-primary px-4 py-2 font-mono">
-          <div class="text-xs">Result:</div>
-          <pre
-            class="pl-2"
-            :class="[___isError___ && 'text-red']"
-            >{{ testResult }}</pre
-          >
-        </div>
+        <JSEvaluator
+          :code="token.match"
+          :args="[testSrc]"
+        />
       </div>
     </div>
   </q-card>

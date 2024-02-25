@@ -10,13 +10,14 @@ const tokenStore = useTokenStore();
 const processStore = useProcessStore();
 
 const { tokens, fileExecuted: file } = storeToRefs(processStore);
-const { tokens: tokenDefinitions } = storeToRefs(tokenStore);
+const { tokens: tokenDefinitions, tokensSorted: tokenDefinitionsSorted } =
+  storeToRefs(tokenStore);
 
 // Display toggler
 
 const definitionIDs = useArrayMap(tokenDefinitions, (def) => def.id);
 const hiddenDisplay = ref([...definitionIDs.value]);
-const mappedDefinitions = useArrayMap(tokenDefinitions, (def) => ({
+const mappedDefinitions = useArrayMap(tokenDefinitionsSorted, (def) => ({
   label: def.name,
   value: def.id,
   color: "green",

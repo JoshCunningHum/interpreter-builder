@@ -17,10 +17,10 @@ const prepends = [
   },
 ];
 
-const addAction = ["Tokens", "Reserve Words"];
+const addAction = ["Tokens", "Reserve Words", "Parse Trees"];
 
 const addHookFunc = ref<() => void>();
-watch(tab, () => set(addHookFunc, undefined))
+watch(tab, () => set(addHookFunc, undefined));
 
 const onAdd = () => {
   if (addHookFunc.value) addHookFunc.value();
@@ -45,7 +45,7 @@ const onAdd = () => {
         v-for="(t, i) in tabs"
         :key="i"
         :name="i"
-        class="w-full flex"
+        class="flex w-full"
       >
         <component
           :is="t"
