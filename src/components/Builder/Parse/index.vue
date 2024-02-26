@@ -28,10 +28,10 @@ const mappedTokens = useArrayMap(tokensSorted, (t) => ({
 const add = () => {
   get(parseRules).push({
     id: genidnum(),
-    match: `((slice, whole)) => {
-      // Enter pattern matching logic here \n})(...args)`,
-    mapper: `({}) => {
-        // Enter mapping here \n})(args)`,
+    match: `({ pool }) => {
+      // Enter pattern matching logic here \n})`,
+    mapper: `({ pool }) => {
+        // Enter mapping here \n})`,
     name: "",
   });
 };
@@ -67,7 +67,13 @@ const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
         </div>
       </q-item-section>
       <q-item-section side>
-        <q-btn label="Uncollapse" />
+        <q-btn
+          @click="
+            collapseSignal =
+              collapseSignal === -1 ? 1 : collapseSignal === 0 ? 1 : -1
+          "
+          >{{ collapseSignal === -1 ? "Expand" : "Collapse" }} All</q-btn
+        >
       </q-item-section>
     </q-item>
     <q-scroll-area class="flex-grow">

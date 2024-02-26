@@ -4,6 +4,9 @@ import type { ParseRule } from "@/types/Node";
 import { get, set } from "@vueuse/core";
 import { toRefs, ref, watch, onMounted } from "vue";
 import { useMax } from "@vueuse/math";
+import { useQuasar } from "quasar";
+import { useParserStore } from "@/stores/parser";
+import { storeToRefs } from "pinia";
 
 // Define Component Interfaces
 
@@ -24,6 +27,8 @@ const emit = defineEmits<{
   (e: "splitterMove", n: number): void;
 }>();
 
+const parseStore = useParserStore();
+
 // Display Data
 
 const { rule, collapse: collapseSignal, splitter } = toRefs(props);
@@ -33,7 +38,7 @@ const { rule, collapse: collapseSignal, splitter } = toRefs(props);
 const isCollapsed = ref(false);
 
 const collapse = () => set(isCollapsed, true);
-const expand = () => set(isCollapsed, true);
+const expand = () => set(isCollapsed, false);
 
 watch(collapseSignal, (s) => {
   if (!s) return;
@@ -72,6 +77,22 @@ watch(
 );
 
 onMounted(() => recomputeEditorHeight());
+
+// Delete
+
+const q = useQuasar();
+const { parseRules } = storeToRefs(parseStore);
+
+const remove = () => {
+  q.dialog({
+    title: "Delete Rule?",
+    message: "Are you sure you want to delete rule?",
+    cancel: true,
+    class: "no-shadow",
+  }).onOk(() => {
+    get(parseRules).splice(props.index, 1);
+  });
+};
 </script>
 
 <template>
@@ -115,6 +136,16 @@ onMounted(() => recomputeEditorHeight());
             </q-popup-edit>
           </span>
         </p>
+      </q-item-section>
+      <q-item-section side>
+        <q-btn
+          flat
+          @click="remove"
+          round
+          padding="xs"
+          color="red"
+          icon="mdi-delete"
+        />
       </q-item-section>
     </q-item>
 
