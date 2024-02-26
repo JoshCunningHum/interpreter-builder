@@ -1,26 +1,26 @@
 <script setup lang="ts">
+import {
+  RunTokenMatch,
+  type TokenDef,
+  type TokenDefMatchArgs,
+} from "@/types/Token";
 import isFirefox from "@/utils/isFirefox";
 import { set } from "@vueuse/core";
 import { computed, ref } from "vue";
 
-const { args: __args__ = [], code } = defineProps<{
-  code: string;
-  args?: any[];
-  run: () => void;
+const { token, test } = defineProps<{
+  token: TokenDef;
+  test: string;
 }>();
 
 const ___isError___ = ref(false);
 const result = computed(() => {
   set(___isError___, false);
-
-  const args = __args__;
-  try {
-    return eval(code);
-  } catch (e: any) {
+  const args = <TokenDefMatchArgs>{ slice: test, whole: test };
+  return RunTokenMatch(token, args, (e) => {
     set(___isError___, true);
-
     return `${e}\n${isFirefox() ? ` at ${e.lineNumber}:${e.columnNumber}` : ""}`;
-  }
+  });
 });
 </script>
 

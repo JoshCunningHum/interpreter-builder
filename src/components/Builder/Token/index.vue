@@ -18,9 +18,9 @@ const { tokens } = storeToRefs(tokenStore);
 const add = () => {
   get(tokens).push({
     id: genidnum(),
-    match: `((slice, whole) => {
+    match: `(({ slice, whole }) => {
     // Enter token finding logic here...
-})(...args)`,
+})`,
     name: "",
   });
 };

@@ -1,15 +1,13 @@
 <script setup lang="ts">
 import CMEditorCode from "@/components/CMEditorCode.vue";
 import CMEditorJS from "@/components/CMEditorJS.vue";
-import JSEvaluator from "@/components/JSEvaluator.vue";
 import { useTokenStore } from "@/stores/token";
-import type { TokenDef } from "@/types/Token";
-import isFirefox from "@/utils/isFirefox";
-import { sanitizeJS } from "@/utils/sanitizeJS";
-import { get, set, useMutationObserver, watchImmediate } from "@vueuse/core";
+import { type TokenDef } from "@/types/Token";
+import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { useQuasar } from "quasar";
-import { computed, ref, toRefs, watch } from "vue";
+import { onMounted, ref, toRefs, watch } from "vue";
+import MatchEvaluator from "./MatchEvaluator.vue";
 
 const props = defineProps<{
   def: TokenDef;
@@ -62,14 +60,17 @@ const collapsedHeight = ref(9999);
 //   },
 //   { attributes: true, childList: true },
 // );
-
-watch(
-  [testSrc, () => token.value.match, isCollapsed],
-  () => {
+const recomputeCollapseHeight = () => {
+  setTimeout(() => {
     const sch = collapsedComponent.value?.scrollHeight;
     if (!sch) return;
     set(collapsedHeight, sch);
-  },
+  }, 50);
+};
+
+watch(
+  [testSrc, mode, () => token.value.match, isCollapsed],
+  recomputeCollapseHeight,
   { immediate: true },
 );
 
@@ -87,6 +88,8 @@ const toggleCollapse = () => {
   set(isCollapsed, !get(isCollapsed));
   emit("collapseReset");
 };
+
+onMounted(recomputeCollapseHeight);
 </script>
 
 <template>
@@ -167,9 +170,9 @@ const toggleCollapse = () => {
       </div>
       <div v-else>
         <CMEditorCode v-model="testSrc" />
-        <JSEvaluator
-          :code="token.match"
-          :args="[testSrc]"
+        <MatchEvaluator
+          :token="token"
+          :test="testSrc"
         />
       </div>
     </div>
