@@ -38,6 +38,7 @@ const onAdd = () => {
     <q-tab-panels
       v-model="tab"
       animated
+      keep-alive
       vertical
       class="flex-grow"
     >
@@ -47,13 +48,11 @@ const onAdd = () => {
         :name="i"
         class="flex w-full"
       >
-        <keep-alive>
-          <component
-            :is="t"
-            @initializeAddHook="(func: () => void) => (addHookFunc = func)"
-            class="flex-grow"
-          />
-        </keep-alive>
+        <component
+          :is="t"
+          @initializeAddHook="(func: () => void) => (addHookFunc = func)"
+          class="flex-grow"
+        />
       </q-tab-panel>
     </q-tab-panels>
   </div>

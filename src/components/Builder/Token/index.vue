@@ -46,12 +46,19 @@ const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
       <div class="text-h5 text-muted select-none">No Token Definitions</div>
     </div>
     <template v-else>
-      <div class="flex justify-between pb-4">
-        <span class="text-hint text-caption">
-          <!-- TODO: Somethere Here-->
-        </span>
-
-        <div class="flex gap-2">
+      <q-item
+        flat
+        dense
+      >
+        <q-item-section>
+          <div class="flex flex-col">
+            <span class="text-xl font-medium">Define Tokens</span>
+            <span class="text-hint text-xs"
+              >Define token and the its pattern capture logic</span
+            >
+          </div>
+        </q-item-section>
+        <q-item-section side>
           <q-btn
             @click="
               collapseSignal =
@@ -59,9 +66,9 @@ const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
             "
             >{{ collapseSignal === -1 ? "Expand" : "Collapse" }} All</q-btn
           >
-        </div>
-      </div>
-      <q-scroll-area class="flex-grow">
+        </q-item-section>
+      </q-item>
+      <q-scroll-area class="mt-2 flex-grow">
         <draggable
           class="flex flex-col gap-4"
           v-model="tokens"
