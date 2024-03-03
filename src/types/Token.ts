@@ -18,10 +18,18 @@ export interface TokenDefMatchArgs {
     whole: string;
 }
 
-export const RunTokenMatch = (def: TokenDef, args: TokenDefMatchArgs, handleError?: (e: any) => void): any => {
+export const TokenDefMatchArgsBuilder = (str: string, start: number): TokenDefMatchArgs => (<TokenDefMatchArgs>{ slice: str.slice(start), whole: str })
+
+export const RunTokenMatch = (def: TokenDef, args: TokenDefMatchArgs, handleError?: (e: any) => any): (string | number | undefined) => {
     try {
-        return eval(def.match)(args);
+        return eval(def.match)(args) as number;
     } catch (e) {
         if (handleError) return handleError(e);
     }
+}
+
+// Utility Functions
+
+export const GetTokenDef = (token: Token, tokenDefs: TokenDef[]): TokenDef | undefined => {
+    return tokenDefs.find(def => def.id === token.type);
 }

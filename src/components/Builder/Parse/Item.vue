@@ -113,7 +113,7 @@ const remove = () => {
             @click="toggleCollapse"
           />
           <span :class="[!rule.name && 'text-muted']">
-            {{ rule.name || "Assign a token name" }}
+            {{ rule.name || "Assign a rule name" }}
 
             <q-popup-edit
               square

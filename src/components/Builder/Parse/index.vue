@@ -1,36 +1,26 @@
 <script setup lang="ts">
 import { useParserStore } from "@/stores/parser";
-import { useTokenStore } from "@/stores/token";
 import genidnum from "@/utils/genidnum";
-import { get, set, useArrayMap } from "@vueuse/core";
-import draggable from "vuedraggable";
+import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
-import { defineAsyncComponent, onMounted, ref } from "vue";
-import Item from "./Item.vue";
-import type { ParseRule } from "@/types/Node";
+import { onMounted, ref } from "vue";
+import Editing from "./Editing.vue";
+import Testing from "./Testing.vue";
 
 const emit = defineEmits<{
   (e: "initializeAddHook", func: () => void): void;
 }>();
 
 const parseStore = useParserStore();
-const tokenStore = useTokenStore();
-const { tokens, tokensSorted } = storeToRefs(tokenStore);
-const { exludedTokens, parseRules } = storeToRefs(parseStore);
-
-const mappedTokens = useArrayMap(tokensSorted, (t) => ({
-  label: t.name,
-  value: t.id,
-  color: "red",
-}));
+const { parseRules } = storeToRefs(parseStore);
 
 // Adding Rules
 const add = () => {
   get(parseRules).push({
     id: genidnum(),
-    match: `({ pool }) => {
+    match: `(({ pool, T, N }) => {
       // Enter pattern matching logic here \n})`,
-    mapper: `({ pool }) => {
+    mapper: `(({ pool, setKind, setBody, setData, start, end }) => {
         // Enter mapping here \n})`,
     name: "",
   });
@@ -43,17 +33,17 @@ onMounted(() => emit("initializeAddHook", add));
 const collapseSignal = ref(1);
 const collapseReset = () => set(collapseSignal, 0);
 
-// Collective Splitter Width
-const splitterWidth = ref(50);
+// Edit/Test Mode
+enum Mode {
+  Editing,
+  Testing,
+}
 
-// Lazy Load Item Component
-const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
+const mode = ref(Mode.Editing);
 </script>
 
 <template>
   <div class="flex h-full flex-col gap-2">
-    <!-- Sanitize Section -->
-
     <q-item
       flat
       dense
@@ -67,79 +57,30 @@ const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
         </div>
       </q-item-section>
       <q-item-section side>
-        <q-btn
-          @click="
-            collapseSignal =
-              collapseSignal === -1 ? 1 : collapseSignal === 0 ? 1 : -1
-          "
-          >{{ collapseSignal === -1 ? "Expand" : "Collapse" }} All</q-btn
-        >
+        <q-btn-group>
+          <q-btn
+            v-show="mode === Mode.Editing"
+            @click="
+              collapseSignal =
+                collapseSignal === -1 ? 1 : collapseSignal === 0 ? 1 : -1
+            "
+            >{{ collapseSignal === -1 ? "Expand" : "Collapse" }} All</q-btn
+          >
+          <q-btn
+            @click="mode = [1, 0][mode]"
+            :icon="['mdi-pencil', 'mdi-format-letter-matches'][mode]"
+            :label="Mode[mode]"
+          />
+        </q-btn-group>
       </q-item-section>
     </q-item>
-    <q-scroll-area class="flex-grow">
-      <q-card
-        flat
-        bordered
-      >
-        <q-expansion-item
-          switch-toggle-side
-          label="Sanitize Tokens"
-          caption="Specify tokens that are not included for parsing, like comments and whitespaces"
-        >
-          <template #header>
-            <div class="flex flex-col">
-              <span class="text-subtitle1 font-bold">Sanitize Tokens</span>
-              <span class="text-caption text-hint"
-                >Specify tokens that are not included for parsing, like comments
-                and whitespaces.</span
-              >
-            </div>
-          </template>
-          <q-card>
-            <q-card-section>
-              <q-option-group
-                type="checkbox"
-                style="max-width: calc(100vw - 500px)"
-                class="flex basis-0 flex-wrap"
-                :options="mappedTokens"
-                v-model="exludedTokens"
-              />
-            </q-card-section>
-          </q-card>
-        </q-expansion-item>
-      </q-card>
 
-      <!-- Items -->
-      <draggable
-        class="mt-2 flex flex-col gap-4"
-        v-model="parseRules"
-        item-key="id"
-        :animation="200"
-        group="token-definitinos"
-        ghostClass="opacity-25"
-        handle=".handle"
-        tag="div"
-      >
-        <template
-          #item="{
-            element: t,
-            index: i,
-          }: {
-            element: ParseRule;
-            index: number;
-          }"
-        >
-          <LazyItem
-            :splitter="splitterWidth"
-            :collapse="collapseSignal"
-            @collapseReset="collapseReset"
-            @splitter-move="(v) => (splitterWidth = v)"
-            :rule="t"
-            :index="i"
-          />
-        </template>
-      </draggable>
-    </q-scroll-area>
+    <Editing
+      v-if="mode === Mode.Editing"
+      :collapse-signal="collapseSignal"
+      @collapse-reset="collapseReset"
+    />
+    <Testing v-else />
   </div>
 </template>
 

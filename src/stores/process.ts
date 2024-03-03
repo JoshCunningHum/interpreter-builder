@@ -1,14 +1,21 @@
+import { produceAST } from "@/logic/ast";
 import { tokenize } from "@/logic/lexer";
 import type { CodeFile } from "@/types/CodeFile";
+import type { ASTNode } from "@/types/Node";
 import type { Token } from '@/types/Token';
 import { get, set } from "@vueuse/core";
 import { acceptHMRUpdate, defineStore } from "pinia";
 import { ref } from "vue";
+import { useParserStore } from './parser';
+import { useTokenStore } from "./token";
 
 export const useProcessStore = defineStore("process", () => {
+    const parseStore = useParserStore();
+    const tokenStore = useTokenStore();
 
     const fileExecuted = ref<CodeFile>();
     const tokens = ref<Token[]>([]);
+    const pool = ref<(ASTNode | Token)[]>([]);
 
     const reset = () => {
         get(tokens).splice(0);
@@ -19,7 +26,15 @@ export const useProcessStore = defineStore("process", () => {
         reset();
         set(fileExecuted, file);
 
-        get(tokens).push(...tokenize(file.data));
+        const tokenize_result = tokenize(file.data);
+        get(tokens).push(...tokenize_result);
+        const ast_result = produceAST({
+            tokens: tokenize_result,
+            excludeTokens: parseStore.exludedTokens,
+            rules: parseStore.parseRules,
+            tokenDefs: tokenStore.tokens
+        });
+
     }
 
     return {
