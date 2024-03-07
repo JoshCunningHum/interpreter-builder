@@ -78,7 +78,7 @@ const RunRule = (
     const start = offset + s;
 
     // Generate RuleMapperArgs
-    const args = RuleMapperArgsBuilder(pool, [start, start + l]);
+    const args = RuleMapperArgsBuilder(pool, [start, start + l], rule);
 
     // Pass it to the mapper
     const error = RunParseMapper(rule, args, (e) =>
@@ -89,7 +89,7 @@ const RunRule = (
 
     pool.splice(start, l, generatedNode);
 
-    return -(l + 1);
+    return -(l - 1);
   }, 0);
 
   if (Logging) {

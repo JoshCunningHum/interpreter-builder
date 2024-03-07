@@ -4,7 +4,7 @@ const DEV = false;
 
 export interface ASTNode {
   kind: string;
-  body: ASTNode[];
+  body: (Token | ASTNode)[];
   data: Record<string, any>;
 }
 
@@ -37,11 +37,12 @@ export interface RuleMatchArgs {
 
 // Utility Functions
 
-const isToken = (v: Token | ASTNode): v is Token => "type" in v;
-const isNode = (v: Token | ASTNode): v is ASTNode => "kind" in v;
+const isToken = (v: Token | ASTNode): v is Token => !!v && "type" in v;
+const isNode = (v: Token | ASTNode): v is ASTNode => !!v && "kind" in v;
 const isMatch = (v: ASTNode | Token, type: string | number) =>
-  (typeof type === "string" && isNode(v) && v.kind === type) ||
-  (typeof type === "number" && isToken(v) && v.type === type);
+  !!v &&
+  ((typeof type === "string" && isNode(v) && v.kind === type) ||
+    (typeof type === "number" && isToken(v) && v.type === type));
 
 // Non-Included Utility Functions
 
@@ -180,18 +181,23 @@ export interface RuleMapperArgs {
   setData: (data: Record<string, any>) => void;
   range: (start: number, end: number) => number[];
 
+  isToken: typeof isToken;
+  isNode: typeof isNode;
+  isMatch: typeof isMatch;
+
   data: () => ASTNode;
 }
 
 export const RuleMapperArgsBuilder = (
   pool: (Token | ASTNode)[],
   [start, end]: [number, number],
+  rule: ParseRule,
 ): RuleMapperArgs => {
   // ASTNODE Template
   const template: ASTNode = {
     body: [],
     data: {},
-    kind: "___NULL___",
+    kind: rule.name,
   };
 
   return {
@@ -200,7 +206,9 @@ export const RuleMapperArgsBuilder = (
     end,
 
     setKind: (kind) => (template.kind = kind),
-    setBody: (indexes) => pool.filter((_, i) => indexes.includes(i)),
+    setBody: (indexes) => {
+      template.body = pool.filter((_, i) => indexes.includes(i));
+    },
     setData: (data) => (template.data = data),
     range: (start, end) =>
       Array(end - start + 1)
@@ -208,6 +216,9 @@ export const RuleMapperArgsBuilder = (
         .map((_, i) => start + i),
 
     data: () => template,
+    isMatch,
+    isNode,
+    isToken,
   };
 };
 
