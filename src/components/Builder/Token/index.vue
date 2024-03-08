@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useExport } from "@/hooks/useExport";
+import { useImport } from "@/hooks/useImport";
 import { useTokenStore } from "@/stores/token";
 import type { TokenDef } from "@/types/Token";
 import genidnum from "@/utils/genidnum";
@@ -6,7 +8,6 @@ import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { defineAsyncComponent, onMounted, ref } from "vue";
 import draggable from "vuedraggable";
-import Item from "./Item.vue";
 
 const emit = defineEmits<{
   (e: "initializeAddHook", func: () => void): void;
@@ -39,26 +40,30 @@ const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
 
 <template>
   <div class="flex w-full flex-col">
-    <div
-      v-if="tokens.length === 0"
-      class="flex flex-grow items-center justify-center"
+    <q-item
+      flat
+      dense
     >
-      <div class="text-h5 text-muted select-none">No Token Definitions</div>
-    </div>
-    <template v-else>
-      <q-item
-        flat
-        dense
-      >
-        <q-item-section>
-          <div class="flex flex-col">
-            <span class="text-xl font-medium">Define Tokens</span>
-            <span class="text-hint text-xs"
-              >Define token and the its pattern capture logic</span
-            >
-          </div>
-        </q-item-section>
-        <q-item-section side>
+      <q-item-section>
+        <div class="flex flex-col">
+          <span class="text-xl font-medium">Define Tokens</span>
+          <span class="text-hint text-xs"
+            >Define token and the its pattern capture logic</span
+          >
+        </div>
+      </q-item-section>
+      <q-item-section side>
+        <q-btn-group>
+          <q-btn
+            @click="useImport('TokenDefinitions')"
+            icon="mdi-import"
+            label="Import"
+          />
+          <q-btn
+            @click="useExport('TokenDefinitions')"
+            icon="mdi-export"
+            label="Export"
+          />
           <q-btn
             @click="
               collapseSignal =
@@ -66,44 +71,48 @@ const LazyItem = defineAsyncComponent(() => import("./Item.vue"));
             "
             >{{ collapseSignal === -1 ? "Expand" : "Collapse" }} All</q-btn
           >
-        </q-item-section>
-      </q-item>
-      <q-scroll-area class="mt-2 flex-grow">
-        <draggable
-          class="flex flex-col gap-4"
-          v-model="tokens"
-          item-key="id"
-          :animation="200"
-          group="token-definitinos"
-          ghostClass="opacity-25"
-          handle=".handle"
+        </q-btn-group>
+      </q-item-section>
+    </q-item>
+
+    <div
+      v-if="tokens.length === 0"
+      class="flex flex-grow items-center justify-center"
+    >
+      <div class="text-h5 text-muted select-none">No Token Definitions</div>
+    </div>
+    <q-scroll-area
+      v-else
+      class="mt-2 flex-grow"
+    >
+      <draggable
+        class="flex flex-col gap-4"
+        v-model="tokens"
+        item-key="id"
+        :animation="200"
+        group="token-definitinos"
+        ghostClass="opacity-25"
+        handle=".handle"
+      >
+        <template
+          #item="{ element: t, index: i }: { element: TokenDef; index: number }"
         >
-          <template
-            #item="{
-              element: t,
-              index: i,
-            }: {
-              element: TokenDef;
-              index: number;
-            }"
-          >
-            <LazyItem
-              :collapse="collapseSignal"
-              @collapseReset="collapseReset"
-              :def="t"
-              :key="t.id"
-              :index="i"
-            />
-          </template>
-        </draggable>
-      </q-scroll-area>
-      <!-- <q-btn
+          <LazyItem
+            :collapse="collapseSignal"
+            @collapseReset="collapseReset"
+            :def="t"
+            :key="t.id"
+            :index="i"
+          />
+        </template>
+      </draggable>
+    </q-scroll-area>
+    <!-- <q-btn
       @click="add"
       color="primary"
       text-color="white"
       label="Add Token"
     /> -->
-    </template>
   </div>
 </template>
 

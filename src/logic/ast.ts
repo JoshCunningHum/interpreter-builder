@@ -78,7 +78,12 @@ const RunRule = (
     const start = offset + s;
 
     // Generate RuleMapperArgs
-    const args = RuleMapperArgsBuilder(pool, [start, start + l], rule);
+    const args = RuleMapperArgsBuilder(
+      pool,
+      [start, start + l],
+      rule,
+      tokenDefs,
+    );
 
     // Pass it to the mapper
     const error = RunParseMapper(rule, args, (e) =>

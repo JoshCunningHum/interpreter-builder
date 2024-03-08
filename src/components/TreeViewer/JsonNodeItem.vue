@@ -2,17 +2,18 @@
 import type { ASTNode } from "@/types/Node";
 import { computed } from "vue";
 import Json from "./Json.vue";
+import ObjectViewer from "../ObjectViewer/ObjectViewer.vue";
 
 const { node } = defineProps<{
   node: ASTNode;
 }>();
 
-const data = computed(() =>
-  Object.entries(node.data).map(([k, v]) => [
-    k as string,
-    typeof v === "object" ? (JSON.stringify(v) as string) : v,
-  ]),
-);
+// const data = computed(() =>
+//   Object.entries(node.data).map(([k, v]) => [
+//     k as string,
+//     typeof v === "object" ? (JSON.stringify(v) as string) : v,
+//   ]),
+// );
 </script>
 
 <template>
@@ -27,14 +28,18 @@ const data = computed(() =>
       </div>
     </template>
     <div class="pl-6">
-      <div
+      <ObjectViewer
+        :obj="node.data"
+        :show-brackets="false"
+      />
+      <!-- <div
         class="text-neutral-400"
         v-for="[key, value] in data"
         :key="key"
       >
         <span>{{ key }}: </span>
         <span>{{ value }} </span>
-      </div>
+      </div> -->
       <Json
         v-if="node.body.length"
         :nodes="node.body"

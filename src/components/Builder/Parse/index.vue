@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useExport } from "@/hooks/useExport";
+import { useImport } from "@/hooks/useImport";
 import { useParserStore } from "@/stores/parser";
 import genidnum from "@/utils/genidnum";
 import { get, set } from "@vueuse/core";
@@ -58,6 +60,16 @@ const mode = ref(Mode.Editing);
       </q-item-section>
       <q-item-section side>
         <q-btn-group>
+          <q-btn
+            @click="useImport('ParseRules')"
+            icon="mdi-import"
+            label="Import"
+          />
+          <q-btn
+            @click="useExport('ParseRules')"
+            icon="mdi-export"
+            label="Export"
+          />
           <q-btn
             v-show="mode === Mode.Editing"
             @click="
