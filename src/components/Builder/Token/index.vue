@@ -6,7 +6,7 @@ import type { TokenDef } from "@/types/Token";
 import genidnum from "@/utils/genidnum";
 import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
-import { defineAsyncComponent, onMounted, ref } from "vue";
+import { defineAsyncComponent, onActivated, onMounted, ref } from "vue";
 import draggable from "vuedraggable";
 
 const emit = defineEmits<{
@@ -26,9 +26,7 @@ const add = () => {
   });
 };
 
-onMounted(() => {
-  emit("initializeAddHook", add);
-});
+onActivated(() => emit("initializeAddHook", add));
 
 // Toggling collapse and expand for all items
 const collapseSignal = ref(1);

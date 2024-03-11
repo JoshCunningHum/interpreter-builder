@@ -5,7 +5,7 @@ import { useParserStore } from "@/stores/parser";
 import genidnum from "@/utils/genidnum";
 import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
-import { onMounted, ref } from "vue";
+import { onActivated, onMounted, ref } from "vue";
 import Editing from "./Editing.vue";
 import Testing from "./Testing.vue";
 
@@ -28,7 +28,7 @@ const add = () => {
   });
 };
 
-onMounted(() => emit("initializeAddHook", add));
+onActivated(() => emit("initializeAddHook", add));
 
 // Collapse/Uncollapse
 

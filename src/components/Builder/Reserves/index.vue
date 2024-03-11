@@ -3,7 +3,7 @@ import { useTokenStore } from "@/stores/token";
 import genidnum from "@/utils/genidnum";
 import { get } from "@vueuse/core";
 import { storeToRefs } from "pinia";
-import { onMounted } from "vue";
+import { onActivated, onMounted, onUpdated } from "vue";
 import Item from "./Item.vue";
 import { useImport } from "@/hooks/useImport";
 import { useExport } from "@/hooks/useExport";
@@ -15,15 +15,15 @@ const emit = defineEmits<{
 const tokenStore = useTokenStore();
 const { reserves } = storeToRefs(tokenStore);
 
-onMounted(() => {
-  emit("initializeAddHook", () => {
-    get(reserves).push({
-      id: genidnum(),
-      type: -1,
-      value: "",
-    });
+const add = () => {
+  get(reserves).push({
+    id: genidnum(),
+    type: -1,
+    value: "",
   });
-});
+};
+
+onActivated(() => emit("initializeAddHook", add));
 </script>
 
 <template>
