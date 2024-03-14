@@ -10,23 +10,25 @@ const { nodes } = defineProps<{
 </script>
 
 <template>
-  <div class="bg-neutral-300/5">
+  <div
+    class="bg-neutral-300/5"
+    v-if="!!nodes"
+  >
     <template
-      v-for="(n, i) in nodes"
-      :key="i"
+      v-for="(n, index) in nodes"
+      :key="index"
     >
       <JsonNodeItem
-        v-if="'kind' in n"
+        v-if="!!n && 'kind' in n"
         :node="n"
       />
 
       <JsonTokenItem
-        :token="n"
         v-else
+        :token="n"
       />
     </template>
   </div>
 </template>
 
 <style lang="scss" scoped></style>
-./JsonNodeItem.vue

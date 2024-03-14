@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { type ParseProcessLog } from "@/stores/parser";
 import Json from "@/components/TreeViewer/Json.vue";
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import { checkASTHealth } from "@/logic/ast";
 
 const { log } = defineProps<{
   log: ParseProcessLog;
 }>();
 
 const { matches, pool, rule, ruleIndex } = log;
+
+const isHealthy = computed(() => checkASTHealth(log.pool));
 </script>
 
 <template>
@@ -23,7 +26,12 @@ const { matches, pool, rule, ruleIndex } = log;
     <template #header>
       <div class="flex flex-grow gap-4">
         <div class="text-overline flex w-4 items-center justify-center text-lg">
-          {{ ruleIndex }}
+          <span v-if="isHealthy">{{ ruleIndex }}</span>
+          <q-icon
+            v-else
+            name="mdi-alert"
+            class="text-red-500"
+          />
         </div>
         <div class="flex flex-grow flex-col">
           <div class="body2">{{ rule.name }}</div>
