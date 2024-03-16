@@ -11,51 +11,53 @@ const tabs = [Reserves, Token, Parse, Interpreter];
 const tab = ref(0);
 
 const prepends = [
-  {
-    label: "Reserve Words",
-    icon: "mdi-alphabetical-variant",
-  },
+    {
+        label: "Reserve Words",
+        icon: "mdi-alphabetical-variant",
+    },
 ];
 
-const addAction = ["Tokens", "Reserve Words", "Parse Trees"];
+const addAction = ["Tokens", "Reserve Words", "Parse Trees", "Interpret Code"];
 
 const addHookFunc = ref<() => void>();
 watch(tab, () => set(addHookFunc, undefined));
 
 const onAdd = () => {
-  if (addHookFunc.value) addHookFunc.value();
+    if (addHookFunc.value) addHookFunc.value();
 };
 </script>
 
 <template>
-  <div class="flex h-screen">
-    <process-tabs
-      @add="onAdd"
-      :add-actions="addAction"
-      :prepend="prepends"
-      v-model="tab"
-    />
-    <q-tab-panels
-      v-model="tab"
-      animated
-      keep-alive
-      vertical
-      class="flex-grow"
-    >
-      <q-tab-panel
-        v-for="(t, i) in tabs"
-        :key="i"
-        :name="i"
-        class="flex w-full"
-      >
-        <component
-          :is="t"
-          @initializeAddHook="(func: () => void) => (addHookFunc = func)"
-          class="flex-grow"
+    <div class="flex h-screen">
+        <process-tabs
+            @add="onAdd"
+            :add-actions="addAction"
+            :prepend="prepends"
+            v-model="tab"
         />
-      </q-tab-panel>
-    </q-tab-panels>
-  </div>
+        <q-tab-panels
+            v-model="tab"
+            animated
+            keep-alive
+            vertical
+            class="flex-grow"
+        >
+            <q-tab-panel
+                v-for="(t, i) in tabs"
+                :key="i"
+                :name="i"
+                class="flex w-full"
+            >
+                <component
+                    :is="t"
+                    @initializeAddHook="
+                        (func: () => void) => (addHookFunc = func)
+                    "
+                    class="flex-grow"
+                />
+            </q-tab-panel>
+        </q-tab-panels>
+    </div>
 </template>
 
 <style lang="scss" scoped></style>

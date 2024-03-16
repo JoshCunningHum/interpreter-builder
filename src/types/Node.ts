@@ -1,10 +1,23 @@
+import {
+  isNode,
+  isMatch,
+  isToken,
+  type ParsePoolItem,
+} from "@/utils/builder/parserutils";
 import { GetTokenDef, type Token, type TokenDef } from "./Token";
+import {
+  NodeIdentifiers,
+  ParseMatchFunctionsBuilder,
+  TokenIdentifiers,
+  type ParseMatchFindWhereCallback,
+} from "@/utils/builder/parsermatch";
+import { ParseMapFunctionBuilder } from "@/utils/builder/parsermap";
 
 const DEV = false;
 
 export interface ASTNode {
   kind: string;
-  body: (Token | ASTNode)[];
+  body: ParsePoolItem[];
   data: Record<string, any>;
 }
 
@@ -18,7 +31,7 @@ export interface ParseRule {
 // #region Matching
 
 export interface RuleMatchArgs {
-  pool: (Token | ASTNode)[];
+  pool: ParsePoolItem[];
   T: Record<string, number>;
   N: Record<string, string>;
   TX: Record<string, string>;
@@ -32,31 +45,18 @@ export interface RuleMatchArgs {
 
   at: (n: number) => ASTNode | Token | undefined;
 
-  find: (...pattern: (string | number)[]) => [number, number] | null;
-  findRGX: (pattern: string, start?: number) => [number, number] | null;
+  find: (
+    pattern: (string | number)[],
+    where?: ParseMatchFindWhereCallback,
+  ) => [number, number] | null;
+  findRGX: (
+    pattern: string,
+    where?: ParseMatchFindWhereCallback,
+  ) => [number, number] | null;
   error: (message: string) => Error;
 }
 
-// Utility Functions
-
-const isToken = (v: Token | ASTNode): v is Token => !!v && "type" in v;
-const isNode = (v: Token | ASTNode): v is ASTNode => !!v && "kind" in v;
-const isMatch = (v: ASTNode | Token, type: string | number) =>
-  !!v &&
-  ((typeof type === "string" && isNode(v) && v.kind === type) ||
-    (typeof type === "number" && isToken(v) && v.type === type));
-
 // Non-Included Utility Functions
-
-const regexify_char = "\\|";
-const regexify = (v: ASTNode | TokenDef | Token) =>
-  "id" in v
-    ? `${regexify_char}${v.id}`
-    : isNode(v)
-      ? `${regexify_char}${v.kind}`
-      : isToken(v)
-        ? `${regexify_char}${v.type}`
-        : "";
 
 export const RuleMatchArgsBuilder = (
   pool: (Token | ASTNode)[],
@@ -65,93 +65,11 @@ export const RuleMatchArgsBuilder = (
 ): RuleMatchArgs => {
   // Utility Objects
 
-  const T = tokenDefs.reduce(
-    (obj, def) => {
-      obj[def.name] = def.id;
-      return obj;
-    },
-    {} as Record<string, number>,
-  );
+  const { T, TX } = TokenIdentifiers(tokenDefs);
+  const { N, NX } = NodeIdentifiers(pool);
 
-  const TX = tokenDefs.reduce(
-    (obj, def) => {
-      obj[def.name] = regexify(def);
-      return obj;
-    },
-    {} as Record<string, string>,
-  );
-
-  const Nodes = pool.filter<ASTNode>((v): v is ASTNode => isNode(v));
-  const N = Nodes.reduce(
-    (obj, def) => {
-      obj[def.kind] = def.kind;
-      return obj;
-    },
-    {} as Record<string, string>,
-  );
-
-  const NX = Nodes.reduce(
-    (obj, def) => {
-      obj[def.kind] = regexify(def);
-      return obj;
-    },
-    {} as Record<string, string>,
-  );
-
-  // Pass token and node values arranged in a pattern
-  const find = (...pattern: (string | number)[]): [number, number] => {
-    if (pattern.length < 0) return [-1, 0];
-
-    const [first, ...rest] = pattern;
-
-    const start = pool.findIndex((v, i, arr) => {
-      // Make sure it is the same type
-      if (!isMatch(v, first)) return false;
-
-      // If it is the same type, check the rest of the pattern if it matches the next elements
-      const slice = arr.slice(i + 1);
-      return rest.every((t, ti) => isMatch(slice[ti], t));
-    });
-
-    if (start === -1) return [-1, 0];
-    return [start, rest.length + 1];
-  };
-
-  // The Regexable interpretation of the pool
-  const _rgx = pool.map((v) => regexify(v)).join("");
-
-  const findRGX = (pattern: string, start = 0): [number, number] => {
-    const rgx = new RegExp(pattern, "g");
-    const matches = _rgx
-      .split(regexify_char)
-      .slice(start)
-      .join(regexify_char)
-      .match(rgx);
-
-    console.log(matches);
-    if (DEV)
-      console.log(`%cGenerating RGX: %c${rgx}`, "color:gray", "color:orange");
-    if (matches && matches.length) {
-      const sanitized_rgx = _rgx.replace(/\\/g, "");
-      const foundAt = sanitized_rgx.indexOf(matches[0]);
-      const pre = sanitized_rgx.slice(0, foundAt);
-      const computed_index = pre.split(regexify_char[1]).length - 1;
-      const matchLength = matches[0].split(regexify_char[1]).length - 1;
-
-      if (DEV)
-        console.log(
-          `%cMatches: [${matches}]. 
-                %cFrom: ${sanitized_rgx} 
-                ${matches ? `%cFound at: ${computed_index}` : ""}`,
-          `color:${matches.length ? "green" : "red"}`,
-          "color:lightgreen",
-          "color:yellow",
-        );
-
-      return [computed_index + start, matchLength];
-    }
-    return [-1, 0];
-  };
+  // Utility Functions
+  const utils = ParseMatchFunctionsBuilder(pool);
 
   return {
     pool,
@@ -160,17 +78,11 @@ export const RuleMatchArgsBuilder = (
     N,
     NX,
 
-    _rgx,
-
     isToken,
     isNode,
     isMatch,
 
-    at: (n: number) => (n >= 0 && n < pool.length ? pool[n] : undefined),
-
-    // Helper Functions
-    find,
-    findRGX,
+    ...utils,
 
     // Essential Functions
     error: (message: string) => new Error(message),
@@ -209,51 +121,19 @@ export const RuleMapperArgsBuilder = (
   rule: ParseRule,
   tokenDefs: TokenDef[],
 ): RuleMapperArgs => {
-  // ASTNODE Template
-  const template: ASTNode = {
-    body: [],
-    data: {},
-    kind: rule.name,
-  };
+  const { T, TX } = TokenIdentifiers(tokenDefs);
+  const { N, NX } = NodeIdentifiers(pool);
 
-  const T = tokenDefs.reduce(
-    (obj, def) => {
-      obj[def.name] = def.id;
-      return obj;
-    },
-    {} as Record<string, number>,
-  );
-
-  const Nodes = pool.filter<ASTNode>((v): v is ASTNode => isNode(v));
-  const N = Nodes.reduce(
-    (obj, def) => {
-      obj[def.kind] = def.kind;
-      return obj;
-    },
-    {} as Record<string, string>,
-  );
+  const utils = ParseMapFunctionBuilder(rule, pool);
 
   return {
     pool,
     start,
     end,
-
-    setKind: (kind) => (template.kind = kind),
-    setBody: (values) => (template.body = values),
-    setData: (data) => (template.data = data),
-    range: (start, end) => {
-      const indexes = Array(end - start + 1)
-        .fill(0)
-        .map((_, i) => start + i);
-      return pool.filter((_, i) => indexes.includes(i));
-    },
-
     T,
     N,
 
-    data: () => template,
-
-    at: (n: number) => (n >= 0 && n < pool.length ? pool[n] : undefined),
+    ...utils,
 
     isMatch,
     isNode,
