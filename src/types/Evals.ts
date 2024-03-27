@@ -1,16 +1,17 @@
 // Eval Definitions
-
+import type { InterpretLog } from "@/logic/interpreter";
+import { __undefined__, type RuntimeVal } from "@/logic/values";
+import type { PrepareInterpreter } from "@/utils/builder/interpreterinit";
+import { EvalFunctionBuilder } from "@/utils/builder/interpreterutil";
 import {
     hasProp,
     hasPropType,
+    isBoolean,
     isNum,
     isString,
-    isBoolean,
 } from "@/utils/common";
+import genid from "@/utils/genid";
 import type { ASTNode } from "./Node";
-import type { RuntimeVal } from "@/logic/values";
-import { EvalFunctionBuilder } from "@/utils/builder/interpreterutil";
-import type { ParsePoolItem } from "@/utils/builder/parserutils";
 
 export interface EvalDef {
     id: number;
@@ -26,52 +27,98 @@ export interface EvalDefArgs extends ReturnType<typeof EvalFunctionBuilder> {
     isBoolean: typeof isBoolean;
 }
 
-export const ExecuteNode = (
-    node: ASTNode,
-    defs: EvalDef[],
-    tree: ParsePoolItem[],
-    handleError?: (e: any) => any,
-): RuntimeVal => {
-    const def = defs.find((def) => def.kind === node.kind);
-    if (!def)
-        throw new Error(`Node [${node.kind}] does not have an Eval rule.`);
-    const args = EvalDefArgsBuilder({ def, node, tree, defs });
-    return RunEvalDefLogic(def, args, handleError);
-};
-
-export const EvalDefArgsBuilder = ({
-    def,
-    node,
-    tree,
-    defs,
-}: {
-    def: EvalDef;
+export interface ExecuteNodeParams
+    extends ReturnType<typeof PrepareInterpreter> {
     node: ASTNode;
-    tree: ParsePoolItem[];
-    defs: EvalDef[];
-}): EvalDefArgs => {
-    const args = EvalFunctionBuilder(node, tree, defs);
+    logs: InterpretLog[];
+    log: boolean;
+}
 
-    return {
-        ...args,
+export const ExecuteNode = async (
+    params: ExecuteNodeParams,
+): Promise<RuntimeVal> => {
+    const { node, defs, log, logs, cpError } = params;
+    const runtimeLog = Array<any>();
 
+    const _execution_id = genid(16);
+
+    const def = defs.find((def) => def.kind === node.kind);
+
+    if (!def) {
+        const err = new Error(
+            `Node [${node.kind}] does not have an Eval rule.`,
+        );
+        cpError(err, _execution_id);
+
+        if (log) {
+            logs.push({
+                error: _execution_id,
+                node,
+                log: runtimeLog,
+            });
+        }
+
+        return __undefined__;
+    }
+
+    const args: EvalDefArgs = {
+        ...EvalFunctionBuilder(params, runtimeLog),
         hasProp,
         hasPropType,
         isNum,
         isString,
         isBoolean,
     };
+
+    const buffer: { error?: string } = {
+        error: undefined,
+    };
+
+    const result = await RunEvalDefLogic(def, args, (e) => {
+        buffer.error = _execution_id;
+        cpError(e, _execution_id);
+    });
+
+    if (log) {
+        logs.push(
+            Object.assign(
+                {
+                    args: JSON.parse(
+                        JSON.stringify({
+                            children: args.children,
+                            data: args.data,
+                            N: args.N,
+                            template: args.template,
+                        }),
+                    ),
+                    node,
+                    result,
+                    rule: def,
+                    log: runtimeLog,
+                },
+                buffer,
+            ),
+        );
+    }
+
+    return result;
 };
 
-export const RunEvalDefLogic = (
+export const RunEvalDefLogic = async (
     evaldef: EvalDef,
     args: EvalDefArgs,
-    handleError?: (e: any) => any,
-): RuntimeVal | any => {
+    handleError?: (e: Error) => any,
+): Promise<RuntimeVal> => {
     try {
-        eval(evaldef.logic)(args) as RuntimeVal;
+        await eval(evaldef.logic)(args);
         return args.template;
     } catch (e) {
-        if (handleError) return handleError(e);
+        if (
+            ((er): er is Error =>
+                typeof er === "object" && !!er && "message" in er)(e) &&
+            handleError
+        )
+            handleError(e);
     }
+    return __undefined__;
 };

@@ -1,42 +1,31 @@
-import type { ASTNode } from "@/types/Node";
-import { isNode, type ParsePoolItem } from "./parserutils";
-import { EvalDefArgsBuilder, ExecuteNode, type EvalDef } from "@/types/Evals";
 import type { RuntimeVal } from "@/logic/values";
-
-const NodeIdentifier = (tree: ParsePoolItem[]): Record<string, string> => {
-    const result: Record<string, string> = {};
-
-    const queue = Array<ASTNode>();
-    queue.push(
-        ...tree.filter<ASTNode>((node): node is ASTNode => isNode(node)),
-    );
-    while (queue.length) {
-        const node = queue.shift();
-        if (!node) break; // Won't happen, just a typescript thing
-        result[node.kind] = node.kind;
-
-        queue.push(
-            ...node.body.filter<ASTNode>((n): n is ASTNode => isNode(n)),
-        );
-    }
-
-    return result;
-};
+import { ExecuteNode, type ExecuteNodeParams } from "@/types/Evals";
+import type { ASTNode } from "@/types/Node";
 
 export const EvalFunctionBuilder = (
-    node: ASTNode,
-    tree: ParsePoolItem[],
-    defs: EvalDef[],
+    params: ExecuteNodeParams,
+    logs?: any[],
 ) => {
-    const N = NodeIdentifier(tree);
+    const { node, N } = params;
+
     const template: RuntimeVal = {
         type: node.kind,
         value: undefined,
     };
-    const SetType = (t: string) => (template.type = t);
-    const SetValue = (v: string | number | undefined) => (template.value = v);
-    const execute = (node: ASTNode, handleError?: (e: any) => any) =>
-        ExecuteNode(node, defs, tree, handleError);
+    const setKind = (t: string) => (template.type = t);
+    const setValue = (v: string | number | undefined) => (template.value = v);
+    const setAsStatement = () => {
+        template.type = "undefined";
+        template.value = undefined;
+    };
+    const error = (v: string) => (template.error = v);
+    const execute = async (node: ASTNode) => {
+        return await ExecuteNode(Object.assign(params, { node }));
+    };
+    const log = (...e: any[]) => {
+        if (!logs) return;
+        logs.push(...e);
+    };
     const children = node.body;
     const data = node.data;
 
@@ -46,8 +35,11 @@ export const EvalFunctionBuilder = (
         children,
         data,
 
-        SetType,
-        SetValue,
+        setKind,
+        setValue,
+        setAsStatement,
         execute,
+        error,
+        log,
     };
 };

@@ -4,19 +4,17 @@ import { storeToRefs } from "pinia";
 import TimelineItem from "./TimelineItem.vue";
 
 const parseStore = useParserStore();
-const { testLogs, testTokens } = storeToRefs(parseStore);
+const { testLogs, errorList } = storeToRefs(parseStore);
 </script>
 
 <template>
-  <div class="h-full">
-    <q-scroll-area class="h-full">
-      <TimelineItem
-        v-for="log in testLogs"
-        :log="log"
-        :key="log.id"
-      />
-    </q-scroll-area>
-  </div>
+    <div class="h-full">
+        <TimelineItem
+            v-for="log in testLogs"
+            :log="log"
+            :key="log.id"
+        />
+    </div>
 </template>
 
 <style lang="scss" scoped></style>

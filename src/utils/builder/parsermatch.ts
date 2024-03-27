@@ -60,7 +60,10 @@ export type ParseMatchFindWhereCallback = (
     pool: ParsePoolItem[],
 ) => boolean;
 
-export const ParseMatchFunctionsBuilder = (pool: ParsePoolItem[]) => {
+export const ParseMatchFunctionsBuilder = (
+    pool: ParsePoolItem[],
+    runtimeLog?: any[],
+) => {
     const _rgx = pool.map((v) => regexify(v)).join("");
 
     const find = (
@@ -147,10 +150,13 @@ export const ParseMatchFunctionsBuilder = (pool: ParsePoolItem[]) => {
         return [-1, 0];
     };
 
+    const log = (...params: any[]) => runtimeLog?.push(...params);
+
     return {
         _rgx,
         find,
         findRGX,
+        log,
         at: (n: number) => (n >= 0 && n < pool.length ? pool[n] : undefined),
     };
 };

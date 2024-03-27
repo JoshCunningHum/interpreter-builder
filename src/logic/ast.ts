@@ -1,79 +1,218 @@
+import type { ParseProcessLog } from "@/stores/parser";
 import {
-    TokenDefMatchArgsBuilder,
-    type Token,
-    type TokenDef,
-} from "@/types/Token";
-import {
+    RuleMapperArgsBuilder,
     RuleMatchArgsBuilder,
+    RunParseMapper,
+    RunParseMatch,
     type ASTNode,
     type ParseRule,
-    RunParseMatch,
-    RuleMapperArgsBuilder,
-    RunParseMapper,
 } from "@/types/Node";
-import type { ParseProcessLog } from "@/stores/parser";
-import genid from "@/utils/genid";
+import { type Token, type TokenDef } from "@/types/Token";
+import type { PrepareParser } from "@/utils/builder/parseinit";
 import { isToken, type ParsePoolItem } from "@/utils/builder/parserutils";
+import genid from "@/utils/genid";
 
 const DEV = false;
 
-const RunRule = (
-    pool: (Token | ASTNode)[],
-    rules: ParseRule[],
-    tokenDefs: TokenDef[],
+// const RunRule = (
+//     pool: ParsePoolItem[],
+//     rules: ParseRule[],
+//     tokenDefs: TokenDef[],
+//     ruleIndex = 0,
+//     Logging: boolean = false,
+//     Logs: ParseProcessLog[] = [],
+//     MAX_RECURSION_GUARD = 100,
+// ): {
+//     pool: (Token | ASTNode)[];
+//     history?: ParseProcessLog[];
+//     error?: string;
+// } => {
+//     // Base Case
+//     if (ruleIndex > rules.length - 1 || MAX_RECURSION_GUARD <= 0)
+//         return { pool, history: Logs };
+
+//     const rule = rules[rules.length - (ruleIndex + 1)];
+//     if (DEV)
+//         console.log(
+//             `%cStarting iteration for %c<${rule.name}>`,
+//             "color:cyan",
+//             "color:teal",
+//         );
+
+//     // Run Matching
+//     const matches: [number, number][] = [];
+
+//     let MAX_LOOP = pool.length * 2;
+//     while (MAX_LOOP--) {
+//         const start = matches.reduce(
+//             (max, [s, n]) => (max > s + n ? max : s + n),
+//             0,
+//         );
+
+//         if (start > pool.length - 1) break;
+
+//         const args = RuleMatchArgsBuilder(pool.slice(start), tokenDefs, rules);
+
+//         const result = RunParseMatch(rule, args, (e) => {
+//             console.error(`Error on parsing rule: ${rule.name}`, e);
+//         });
+
+//         if (DEV) console.log(rule.name, start, args, result, matches);
+
+//         if (((r: any): r is [number, number] => Array.isArray(r))(result)) {
+//             const [_start, _n] = result;
+//             if (_start === -1) break;
+//             matches.push([_start + start, _n]);
+//         } else if (result instanceof Error) {
+//             return { pool, error: result.message };
+//         } else if (result === undefined) break;
+//     }
+
+//     if (matches.length && DEV) console.log(matches);
+//     else if (DEV)
+//         console.log("%cNo Matches in this iteration", "color:crimson");
+
+//     // Run Mapper
+//     matches.reduce((offset, [s, l]) => {
+//         const start = offset + s;
+
+//         // Generate RuleMapperArgs
+//         const args = RuleMapperArgsBuilder(
+//             pool,
+//             [start, start + l],
+//             rule,
+//             tokenDefs,
+//         );
+
+//         // Pass it to the mapper
+//         const error = RunParseMapper(rule, args, (e) =>
+//             console.error(`Error on mapping: ${rule.name}`, e),
+//         );
+
+//         const generatedNode = args.data();
+
+//         pool.splice(start, l, generatedNode);
+
+//         return -(l - 1);
+//     }, 0);
+
+//     if (Logging) {
+//         Logs.push({
+//             id: genid(16),
+//             rule,
+//             ruleIndex,
+//             matches,
+//             pool: structuredClone(pool),
+//         });
+//     }
+
+//     if (matches.length && DEV)
+//         console.log(
+//             `%cAfterMapping: %c[${pool.map((v) => ("kind" in v ? v.kind : tokenDefs.find((def) => def.id === v.type)?.name))}]`,
+//             "color:lightblue",
+//             "color:turquoise",
+//         );
+
+//     // If matches is not empty, then rerun the whole thing, if not then rerun but to the next ruleIndex
+//     return RunRule(
+//         pool,
+//         rules,
+//         tokenDefs,
+//         matches.length > 0 ? 0 : ruleIndex + 1,
+//         Logging,
+//         Logs,
+//         MAX_RECURSION_GUARD - 1,
+//     );
+//     // return { pool }
+// };
+
+export const produceAST = (
+    params: ReturnType<typeof PrepareParser>,
+
+    // Recursive Parameters
     ruleIndex = 0,
-    Logging: boolean = false,
-    Logs: ParseProcessLog[] = [],
     MAX_RECURSION_GUARD = 100,
 ): {
-    pool: (Token | ASTNode)[];
+    pool: ParsePoolItem[];
     history?: ParseProcessLog[];
-    error?: string;
 } => {
-    // Base Case
-    if (ruleIndex > rules.length - 1 || MAX_RECURSION_GUARD <= 0)
-        return { pool, history: Logs };
+    const {
+        pool,
+        rules,
+        tokenDefs,
+        log,
+        history,
+        onEvalError,
+        onError,
+        T,
+        TX,
+    } = params;
 
-    const rule = rules[rules.length - (ruleIndex + 1)];
-    if (DEV)
-        console.log(
-            `%cStarting iteration for %c<${rule.name}>`,
-            "color:cyan",
-            "color:teal",
+    const output = { pool, history };
+    const runtimeLog: any[] = [];
+    const _execution_id = genid(16);
+    const _onError = (msg: string, line: number, column: number) =>
+        onError(msg, line, column, _execution_id);
+
+    // Base Case
+    if (ruleIndex > rules.length - 1) return output;
+
+    const rule = rules[ruleIndex];
+
+    if (MAX_RECURSION_GUARD <= 0) {
+        onEvalError(
+            new Error("MAX_RECURSION_GUARD Exceeded"),
+            "other",
+            _execution_id,
         );
+
+        if (log) {
+            history.push({
+                id: _execution_id,
+                rule,
+                ruleIndex,
+                matches: [],
+                pool: JSON.parse(JSON.stringify(pool)),
+                logs: runtimeLog,
+            });
+        }
+
+        return output;
+    }
 
     // Run Matching
     const matches: [number, number][] = [];
 
-    let MAX_LOOP = pool.length * 2;
+    let MAX_LOOP = pool.length + 3;
     while (MAX_LOOP--) {
-        const start = matches.reduce(
-            (max, [s, n]) => (max > s + n ? max : s + n),
-            0,
+        const offset = matches.reduce((max, [s, n]) => Math.max(max, s + n), 0);
+        if (offset > pool.length - 1) break;
+
+        const args = RuleMatchArgsBuilder(
+            {
+                history,
+                log,
+                rules,
+                T,
+                tokenDefs,
+                TX,
+                onEvalError,
+                // Changed
+                pool: pool.slice(offset),
+                onError: _onError,
+            },
+            runtimeLog,
         );
-
-        if (start > pool.length - 1) break;
-
-        const args = RuleMatchArgsBuilder(pool.slice(start), tokenDefs, rules);
-
         const result = RunParseMatch(rule, args, (e) => {
-            console.error(`Error on parsing rule: ${rule.name}`, e);
+            onEvalError(e, "match", _execution_id);
         });
 
-        if (DEV) console.log(rule.name, start, args, result, matches);
+        if (!result) break;
 
-        if (((r: any): r is [number, number] => Array.isArray(r))(result)) {
-            const [_start, _n] = result;
-            if (_start === -1) break;
-            matches.push([_start + start, _n]);
-        } else if (result instanceof Error) {
-            return { pool, error: result.message };
-        } else if (result === undefined) break;
+        const [start, length] = result;
+        if (start === -1) break;
+        matches.push([offset + start, length]);
     }
-
-    if (matches.length && DEV) console.log(matches);
-    else if (DEV)
-        console.log("%cNo Matches in this iteration", "color:crimson");
 
     // Run Mapper
     matches.reduce((offset, [s, l]) => {
@@ -81,72 +220,38 @@ const RunRule = (
 
         // Generate RuleMapperArgs
         const args = RuleMapperArgsBuilder(
-            pool,
+            params,
             [start, start + l],
             rule,
-            tokenDefs,
+            runtimeLog,
         );
 
-        // Pass it to the mapper
-        const error = RunParseMapper(rule, args, (e) =>
-            console.error(`Error on mapping: ${rule.name}`, e),
-        );
-
+        // Pass to a mapper
+        RunParseMapper(rule, args, (e) => {
+            onEvalError(e, "map", _execution_id);
+        });
         const generatedNode = args.data();
 
-        pool.splice(start, l, generatedNode);
-
+        pool.splice(start, l, ...generatedNode);
         return -(l - 1);
     }, 0);
 
-    if (Logging) {
-        Logs.push({
-            id: genid(16),
+    if (log) {
+        history.push({
+            id: _execution_id,
             rule,
             ruleIndex,
             matches,
-            pool: structuredClone(pool),
+            pool: JSON.parse(JSON.stringify(pool)),
+            logs: runtimeLog,
         });
     }
 
-    if (matches.length && DEV)
-        console.log(
-            `%cAfterMapping: %c[${pool.map((v) => ("kind" in v ? v.kind : tokenDefs.find((def) => def.id === v.type)?.name))}]`,
-            "color:lightblue",
-            "color:turquoise",
-        );
-
-    // If matches is not empty, then rerun the whole thing, if not then rerun but to the next ruleIndex
-    return RunRule(
-        pool,
-        rules,
-        tokenDefs,
+    return produceAST(
+        params,
         matches.length > 0 ? 0 : ruleIndex + 1,
-        Logging,
-        Logs,
-        MAX_RECURSION_GUARD - 1,
+        matches.length > 0 ? MAX_RECURSION_GUARD - 1 : 100,
     );
-    // return { pool }
-};
-
-export const produceAST = ({
-    tokens,
-    rules,
-    excludeTokens,
-    tokenDefs,
-    log = false,
-}: {
-    tokens: Token[];
-    rules: ParseRule[];
-    tokenDefs: TokenDef[];
-    excludeTokens: number[];
-    log: boolean;
-}) => {
-    const pool = tokens.filter(
-        (t) => !excludeTokens.some((exc) => exc === t.type),
-    );
-
-    return RunRule(pool, rules, tokenDefs, 0, log);
 };
 
 export const checkASTHealth = (pool: ParsePoolItem[]): boolean => {

@@ -1,168 +1,181 @@
-import {
-  isNode,
-  isMatch,
-  isToken,
-  type ParsePoolItem,
-} from "@/utils/builder/parserutils";
-import { GetTokenDef, type Token, type TokenDef } from "./Token";
-import {
-  NodeIdentifiers,
-  ParseMatchFunctionsBuilder,
-  TokenIdentifiers,
-  type ParseMatchFindWhereCallback,
-} from "@/utils/builder/parsermatch";
+import type { PrepareParser } from "@/utils/builder/parseinit";
 import { ParseMapFunctionBuilder } from "@/utils/builder/parsermap";
+import {
+    NodeIdentifiers,
+    ParseMatchFunctionsBuilder,
+    TokenIdentifiers,
+} from "@/utils/builder/parsermatch";
+import {
+    isMatch,
+    isNode,
+    isToken,
+    type ParsePoolItem,
+} from "@/utils/builder/parserutils";
+import { type Token, type TokenDef } from "./Token";
+import { produceAST } from "@/logic/ast";
 
 const DEV = false;
 
 export interface ASTNode {
-  kind: string;
-  body: ParsePoolItem[];
-  data: Record<string, any>;
+    kind: string;
+    body: ParsePoolItem[];
+    data: Record<string, any>;
 }
 
 export interface ParseRule {
-  id: number;
-  name: string;
-  match: string;
-  mapper: string;
+    id: number;
+    name: string;
+    match: string;
+    mapper: string;
 }
 
 // #region Matching
 
-export interface RuleMatchArgs {
-  pool: ParsePoolItem[];
-  T: Record<string, number>;
-  N: Record<string, string>;
-  TX: Record<string, string>;
-  NX: Record<string, string>;
+export interface RuleMatchArgs
+    extends ReturnType<typeof ParseMatchFunctionsBuilder> {
+    pool: ParsePoolItem[];
+    T: Record<string, number>;
+    N: Record<string, string>;
+    TX: Record<string, string>;
+    NX: Record<string, string>;
 
-  _rgx: string;
+    _rgx: string;
 
-  isToken: typeof isToken;
-  isNode: typeof isNode;
-  isMatch: typeof isMatch;
-
-  at: (n: number) => ASTNode | Token | undefined;
-
-  find: (
-    pattern: (string | number)[],
-    where?: ParseMatchFindWhereCallback,
-  ) => [number, number] | null;
-  findRGX: (
-    pattern: string,
-    where?: ParseMatchFindWhereCallback,
-  ) => [number, number] | null;
-  error: (message: string) => Error;
+    isToken: typeof isToken;
+    isNode: typeof isNode;
+    isMatch: typeof isMatch;
+    error: (message: string) => void;
 }
 
 // Non-Included Utility Functions
 
 export const RuleMatchArgsBuilder = (
-  pool: (Token | ASTNode)[],
-  tokenDefs: TokenDef[],
-  Rules: ParseRule[],
+    params: ReturnType<typeof PrepareParser>,
+    runtimeLog: any[],
 ): RuleMatchArgs => {
-  // Utility Objects
+    const { onError, pool, T, TX } = params;
 
-  const { T, TX } = TokenIdentifiers(tokenDefs);
-  const { N, NX } = NodeIdentifiers(pool);
+    // Utility Objects
+    const { N, NX } = NodeIdentifiers(pool);
 
-  // Utility Functions
-  const utils = ParseMatchFunctionsBuilder(pool);
+    // Utility Functions
+    const utils = ParseMatchFunctionsBuilder(pool, runtimeLog);
 
-  return {
-    pool,
-    T,
-    TX,
-    N,
-    NX,
+    return {
+        pool,
+        T,
+        TX,
+        N,
+        NX,
 
-    isToken,
-    isNode,
-    isMatch,
+        isToken,
+        isNode,
+        isMatch,
 
-    ...utils,
+        ...utils,
 
-    // Essential Functions
-    error: (message: string) => new Error(message),
-  };
+        // Essential Functions
+        error: (message: string, line = 0, column = 0) =>
+            onError(message, line, column),
+    };
 };
 
 // #endregion
 
 // #region Mapper
 
-export interface RuleMapperArgs {
-  pool: (Token | ASTNode)[];
-  start: number;
-  end: number;
+export interface RuleMapperArgs
+    extends ReturnType<typeof ParseMapFunctionBuilder> {
+    pool: (Token | ASTNode)[];
+    start: number;
+    end: number;
 
-  T: Record<string, number>;
-  N: Record<string, string>;
+    T: Record<string, number>;
+    N: Record<string, string>;
 
-  setKind: (kind: string) => void;
-  setBody: (values: (ASTNode | Token)[]) => void;
-  setData: (data: Record<string, any>) => void;
-  range: (start: number, end: number) => (ASTNode | Token)[];
+    isToken: typeof isToken;
+    isNode: typeof isNode;
+    isMatch: typeof isMatch;
 
-  at: (n: number) => ASTNode | Token | undefined;
-
-  isToken: typeof isToken;
-  isNode: typeof isNode;
-  isMatch: typeof isMatch;
-
-  data: () => ASTNode;
+    parse: (items: ParsePoolItem[]) => ParsePoolItem[];
 }
 
 export const RuleMapperArgsBuilder = (
-  pool: (Token | ASTNode)[],
-  [start, end]: [number, number],
-  rule: ParseRule,
-  tokenDefs: TokenDef[],
+    params: ReturnType<typeof PrepareParser>,
+    [start, end]: [number, number],
+    rule: ParseRule,
+    runtimeLog: any[],
 ): RuleMapperArgs => {
-  const { T, TX } = TokenIdentifiers(tokenDefs);
-  const { N, NX } = NodeIdentifiers(pool);
+    const {
+        T,
+        pool,
+        TX,
+        history,
+        log,
+        onError,
+        onEvalError,
+        rules,
+        tokenDefs,
+    } = params;
 
-  const utils = ParseMapFunctionBuilder(rule, pool);
+    const { N } = NodeIdentifiers(pool);
 
-  return {
-    pool,
-    start,
-    end,
-    T,
-    N,
+    const utils = ParseMapFunctionBuilder(rule, pool, runtimeLog);
 
-    ...utils,
+    const parse = (items: ParsePoolItem[]): ParsePoolItem[] => {
+        const result = produceAST({
+            pool: items,
+            T,
+            TX,
+            history,
+            log,
+            rules,
+            tokenDefs,
+            onError,
+            onEvalError,
+        }).pool;
 
-    isMatch,
-    isNode,
-    isToken,
-  };
+        return result;
+    };
+
+    return {
+        pool,
+        start,
+        end,
+        T,
+        N,
+
+        ...utils,
+
+        isMatch,
+        isNode,
+        isToken,
+        parse,
+    };
 };
 
 export const RunParseMatch = (
-  parseRule: ParseRule,
-  args: RuleMatchArgs,
-  handleError?: (e: any) => any,
-): [number, number] | any => {
-  try {
-    return eval(parseRule.match)(args) as [number, number];
-  } catch (e) {
-    if (handleError) return handleError(e);
-  }
+    parseRule: ParseRule,
+    args: RuleMatchArgs,
+    handleError?: (e: any) => any,
+): [number, number] | undefined => {
+    try {
+        return eval(parseRule.match)(args) as [number, number];
+    } catch (e) {
+        if (handleError) handleError(e);
+    }
 };
 
 export const RunParseMapper = (
-  parseRule: ParseRule,
-  args: RuleMapperArgs,
-  handleError?: (e: any) => any,
-): any => {
-  try {
-    return eval(parseRule.mapper)(args);
-  } catch (e) {
-    if (handleError) return handleError(e);
-  }
+    parseRule: ParseRule,
+    args: RuleMapperArgs,
+    handleError?: (e: any) => any,
+): void => {
+    try {
+        eval(parseRule.mapper)(args);
+    } catch (e) {
+        if (handleError) handleError(e);
+    }
 };
 
 // #endregion

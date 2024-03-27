@@ -1,23 +1,54 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
-import ProcessTabs from "../ProcessTabs.vue";
+import ProcessTabs, { type Tab } from "../ProcessTabs.vue";
 import Token from "./Token/index.vue";
 import Parse from "./Parse/index.vue";
 import Interpreter from "./Interpret/index.vue";
 import Reserves from "./Reserves/index.vue";
+import Globals from "./Globals/index.vue";
 import { get, set } from "@vueuse/core";
 
-const tabs = [Reserves, Token, Parse, Interpreter];
-const tab = ref(0);
-
-const prepends = [
+const tab = ref("Tokens");
+const tabs: Tab[] = [
     {
-        label: "Reserve Words",
-        icon: "mdi-alphabetical-variant",
+        label: "Tokens",
+        icon: "mdi-application-array-outline",
+        addAction: true,
+        component: Token,
+        children: [
+            {
+                label: "Reserve Words",
+                icon: "mdi-alphabetical-variant",
+                addAction: true,
+                component: Reserves,
+                children: [],
+            },
+        ],
+    },
+    {
+        label: "Parse Trees",
+        icon: "mdi-graph-outline",
+        addAction: true,
+        component: Parse,
+        children: [],
+    },
+    {
+        label: "Interpret Code",
+        icon: "mdi-code-tags",
+        addAction: true,
+        component: Interpreter,
+        children: [
+            {
+                label: "Globals",
+                icon: "mdi-web",
+                addAction: false,
+                component: Globals,
+                children: [],
+            },
+        ],
     },
 ];
-
-const addAction = ["Tokens", "Reserve Words", "Parse Trees", "Interpret Code"];
+const tabs_flat = tabs.flatMap((tab) => [tab, ...tab.children]);
 
 const addHookFunc = ref<() => void>();
 watch(tab, () => set(addHookFunc, undefined));
@@ -31,9 +62,8 @@ const onAdd = () => {
     <div class="flex h-screen">
         <process-tabs
             @add="onAdd"
-            :add-actions="addAction"
-            :prepend="prepends"
             v-model="tab"
+            :tabs="tabs"
         />
         <q-tab-panels
             v-model="tab"
@@ -43,13 +73,13 @@ const onAdd = () => {
             class="flex-grow"
         >
             <q-tab-panel
-                v-for="(t, i) in tabs"
-                :key="i"
-                :name="i"
+                v-for="t in tabs_flat"
+                :key="t.label"
+                :name="t.label"
                 class="flex w-full"
             >
                 <component
-                    :is="t"
+                    :is="t.component"
                     @initializeAddHook="
                         (func: () => void) => (addHookFunc = func)
                     "

@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { useExport } from "@/hooks/useExport";
-import { useImport } from "@/hooks/useImport";
+import ProcessTabTitle from "@/components/ProcessTabTitle.vue";
 import { useInterpreterStore } from "@/stores/interpreter";
 import genidnum from "@/utils/genidnum";
-import { set, get } from "@vueuse/core";
+import { get, set } from "@vueuse/core";
 import { storeToRefs } from "pinia";
 import { onActivated, ref } from "vue";
 import Editing from "./Editing.vue";
@@ -42,59 +41,36 @@ enum Mode {
 }
 
 const mode = ref(Mode.Editing);
+
+const toggleCollapse = () => {
+    const current = get(collapseSignal);
+    set(collapseSignal, current === -1 ? 1 : current === 0 ? 1 : -1);
+};
 </script>
 
 <template>
     <div class="flex h-full flex-col gap-2">
-        <q-item
-            flat
-            dense
+        <ProcessTabTitle
+            title="Evaluate Nodes"
+            description="Create logic for each node type"
+            io-key="EvalDefs"
         >
-            <q-item-section>
-                <div class="flex flex-col">
-                    <span class="text-xl font-medium">Evaluate Nodes</span>
-                    <span class="text-hint text-xs">
-                        Create logic for each node type
-                    </span>
-                </div>
-            </q-item-section>
-            <q-item-section side>
-                <q-btn-group>
-                    <q-btn
-                        @click="useImport('EvalDefs')"
-                        icon="mdi-import"
-                        label="Import"
-                    />
-                    <q-btn
-                        @click="useExport('EvalDefs')"
-                        icon="mdi-export"
-                        label="Export"
-                    />
-                    <q-btn
-                        v-show="mode === Mode.Editing"
-                        @click="
-                            collapseSignal =
-                                collapseSignal === -1
-                                    ? 1
-                                    : collapseSignal === 0
-                                      ? 1
-                                      : -1
-                        "
-                        >{{
-                            collapseSignal === -1 ? "Expand" : "Collapse"
-                        }}
-                        All</q-btn
-                    >
-                    <q-btn
-                        @click="mode = [1, 0][mode]"
-                        :icon="
-                            ['mdi-pencil', 'mdi-format-letter-matches'][mode]
-                        "
-                        :label="Mode[mode]"
-                    />
-                </q-btn-group>
-            </q-item-section>
-        </q-item>
+            <template #actions>
+                <q-btn
+                    v-show="mode === Mode.Editing"
+                    @click="toggleCollapse"
+                    >{{
+                        collapseSignal === -1 ? "Expand" : "Collapse"
+                    }}
+                    All</q-btn
+                >
+                <q-btn
+                    @click="mode = [1, 0][mode]"
+                    :icon="['mdi-pencil', 'mdi-format-letter-matches'][mode]"
+                    :label="Mode[mode]"
+                />
+            </template>
+        </ProcessTabTitle>
 
         <Editing
             v-if="mode === Mode.Editing"

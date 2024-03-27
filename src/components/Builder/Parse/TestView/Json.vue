@@ -4,14 +4,14 @@ import { storeToRefs } from "pinia";
 import Json from "@/components/TreeViewer/Json.vue";
 
 const parseStore = useParserStore();
-const { testParseResult } = storeToRefs(parseStore);
+const { parserValues } = storeToRefs(parseStore);
 </script>
 
 <template>
     <div class="h-full">
         <Json
-            v-if="!!testParseResult.pool"
-            :nodes="testParseResult.pool"
+            v-if="!!parserValues?.pool"
+            :nodes="parserValues.pool"
         />
     </div>
 </template>
