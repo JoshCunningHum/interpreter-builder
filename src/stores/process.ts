@@ -1,21 +1,22 @@
+import type { ParsePoolItem } from "@/utils/builder/parserutils";
+import type { CodeFile } from "@/types/CodeFile";
+import type { Token } from "@/types/Token";
 import { produceAST } from "@/logic/ast";
 import { tokenize } from "@/logic/lexer";
-import type { CodeFile } from "@/types/CodeFile";
-import type { ASTNode } from "@/types/Node";
-import type { Token } from "@/types/Token";
+import { PrepareParser } from "@/utils/builder/parseinit";
 import { get, set } from "@vueuse/core";
 import { acceptHMRUpdate, defineStore } from "pinia";
-import { ref } from "vue";
 import { useParserStore } from "./parser";
 import { useTokenStore } from "./token";
+import { ref } from "vue";
 
 export const useProcessStore = defineStore("process", () => {
-  const parseStore = useParserStore();
   const tokenStore = useTokenStore();
+  const parseStore = useParserStore();
 
   const fileExecuted = ref<CodeFile>();
   const tokens = ref<Token[]>([]);
-  const pool = ref<(ASTNode | Token)[]>([]);
+  const pool = ref<ParsePoolItem[]>([]);
 
   const reset = () => {
     get(tokens).splice(0);
@@ -26,15 +27,22 @@ export const useProcessStore = defineStore("process", () => {
     reset();
     set(fileExecuted, file);
 
-    const tokenize_result = tokenize(file.data);
-    get(tokens).push(...tokenize_result);
-    const ast_result = produceAST({
-      tokens: tokenize_result,
-      excludeTokens: parseStore.exludedTokens,
+    const _tokens = tokenize(file.data);
+    get(tokens).push(..._tokens);
+
+    const _parsed = PrepareParser({
+      tokens: _tokens,
       rules: parseStore.parseRules,
+      excludeTokens: parseStore.exludedTokens,
+      log: true,
       tokenDefs: tokenStore.tokens,
-      log: false,
+      onError: console.error,
+      onEvalError: console.error,
     });
+
+    produceAST(_parsed);
+
+    set(pool, _parsed.pool);
   };
 
   return {
