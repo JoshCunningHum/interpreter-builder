@@ -1,8 +1,8 @@
 import type { ParseProcessLog } from "@/stores/parser";
 import type { ParseRule } from "@/types/Node";
 import type { Token, TokenDef } from "@/types/Token";
+import { TokenIdentifiers } from "./parsermatch";
 import type { ParsePoolItem } from "./parserutils";
-import { NodeIdentifiers, TokenIdentifiers } from "./parsermatch";
 
 export interface PrepareParserOptions {
     onError: (msg: string, line: number, column: number, id?: string) => void;

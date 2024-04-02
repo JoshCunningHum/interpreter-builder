@@ -7,6 +7,7 @@ import { evaluateAST } from "@/logic/interpreter";
 import { PrepareInterpreter } from "@/utils/builder/interpreterinit";
 import type { ASTNode } from "@/types/Node";
 import { isNode } from "@/utils/builder/parserutils";
+import { useGlobalStore } from "./global";
 
 export const useInterpreterStore = defineStore("interpreter", () => {
     const evalDefs = useStorage(
@@ -16,8 +17,10 @@ export const useInterpreterStore = defineStore("interpreter", () => {
     );
 
     const parserStore = useParserStore();
+    const globalStore = useGlobalStore();
     const { parserValues, isTesting: isTestingParser } =
         storeToRefs(parserStore);
+    const { glob_obj } = storeToRefs(globalStore);
 
     const errorLists = reactive<
         { id: string; e: Error; type: "Runtime" | "Logic" }[]
@@ -27,14 +30,17 @@ export const useInterpreterStore = defineStore("interpreter", () => {
     }>({});
 
     const isTesting = ref(false);
-    watchImmediate(parserValues, (ast) => {
+    watchImmediate([parserValues, isTesting], () => {
+        globalStore.create_env();
+        const glob = glob_obj.value;
+        const ast = parserValues.value;
+
         if (!get(isTesting) || !ast) return;
 
         const tree = ast.pool.filter((n): n is ASTNode => isNode(n));
 
         errorLists.splice(0);
 
-        console.log(`Preparing Evaluator`);
         interpreterValues.data = undefined;
         interpreterValues.data = PrepareInterpreter({
             onPrint: console.log,
@@ -53,6 +59,7 @@ export const useInterpreterStore = defineStore("interpreter", () => {
             },
             tree,
             defs: evalDefs.value,
+            glob,
         });
     });
 
@@ -61,7 +68,6 @@ export const useInterpreterStore = defineStore("interpreter", () => {
         if (!get(isTesting)) return;
         if (get(isRunning) || !v.data) return;
         set(isRunning, true);
-        console.log(`Evaluating AST`);
         evaluateAST(v.data, true).then(() => {
             const buffer = interpreterValues.data;
             interpreterValues.data = buffer;

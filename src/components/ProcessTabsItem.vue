@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { type Tab } from "./ProcessTabs.vue";
+import { useTrueAlways } from "@/hooks/useTrueAlways";
 
 const { t } = defineProps<{
     t: Tab;
@@ -17,6 +18,8 @@ const isExpanded = computed({
         t.children.some((st) => st.label === tab.value),
     set: (v: boolean) => {},
 });
+
+const truealways = useTrueAlways();
 </script>
 
 <template>
@@ -26,7 +29,7 @@ const isExpanded = computed({
         header-class="w-full flex-grow"
         header-style=""
         hide-expand-icon
-        v-model="isExpanded"
+        v-model="truealways"
     >
         <template #header>
             <div class="group flex flex-grow items-center gap-2 py-2">

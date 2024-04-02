@@ -1,101 +1,42 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
-import ObjectViewer from "@/components/ObjectViewer/ObjectViewer.vue";
+import { JsonViewer } from "vue3-json-viewer";
 
-const { obj, showBrackets = true } = defineProps<{
+const {
+    obj,
+    expandDepth = 1,
+    boxed = false,
+    pretext = "",
+    expanded = false,
+} = defineProps<{
     obj: Object | Array<any> | null | undefined;
-    showBrackets?: boolean;
+    expandDepth?: number;
+    boxed?: boolean;
+    pretext?: string;
+    expanded?: boolean;
 }>();
-
-const isExpanded = ref(false);
-
-const entries = computed(() =>
-    Array.isArray(obj) && "length" in obj
-        ? []
-        : obj === null || obj === undefined
-          ? []
-          : Object.entries(obj),
-);
 </script>
 
 <template>
-    <template v-if="obj === null">
-        <span>null</span>
-    </template>
-    <template v-if="obj === undefined">
-        <span>undefined</span>
-    </template>
-    <template v-else-if="Array.isArray(obj) && 'length' in obj"
-        >[
-        <div
-            v-if="isExpanded"
-            class="inline-flex"
+    <span class="flex gap-2 pb-1">
+        <span
+            v-if="!!pretext"
+            class="jv-cdark jv-key"
+            >{{ pretext }}</span
         >
-            <div
-                v-for="(item, i) in obj"
-                :key="i"
-            >
-                <div v-if="typeof item === 'string'">"{{ item }}"</div>
-                <div v-else-if="typeof item === 'number'">
-                    {{ item }}
-                </div>
-                <div
-                    class="flex"
-                    v-else-if="Array.isArray(item) && 'length' in item"
-                >
-                    <span v-if="showBrackets">[</span>
-                    <ObjectViewer :obj="item" />
-                    <span
-                        v-if="showBrackets"
-                        class="place-self-end self-end justify-self-end"
-                        >]</span
-                    >
-                </div>
-                <div v-else-if="typeof item === 'object'">
-                    <span v-if="showBrackets">{</span>
-                    <ObjectViewer :obj="item" />
-                    <span
-                        v-if="showBrackets"
-                        class="place-self-end self-end justify-self-end"
-                        >}</span
-                    >
-                </div>
-                <span v-if="i < obj.length - 1">,</span>
-            </div>
-        </div>
-        <div
+        <JsonViewer
+            v-if="obj !== undefined"
+            :expanded="expanded"
+            theme="cdark"
+            :value="obj"
+            :boxed="boxed"
+            :expand-depth="expandDepth"
+        />
+        <span
             v-else
-            @click="isExpanded = true"
+            class="jv-cdark jv-undefined"
+            >undefined</span
         >
-            ...
-        </div>
-        ]
-    </template>
-    <template v-else>
-        <div
-            class="flex gap-2 text-neutral-400"
-            v-for="[key, value] in entries"
-            :key="key"
-        >
-            <span>{{ key }}: </span>
-            <span>
-                <div v-if="typeof value === 'string'">"{{ value }}"</div>
-                <div v-else-if="typeof value === 'number'">
-                    {{ value }}
-                </div>
-                <div v-else-if="Array.isArray(value) && 'length' in value">
-                    {{ showBrackets && "[" }}<ObjectViewer :obj="value" />{{
-                        showBrackets && "]"
-                    }}
-                </div>
-                <div v-else-if="typeof value === 'object'">
-                    {{ showBrackets && "{" }}<ObjectViewer :obj="value" />{{
-                        showBrackets && "}"
-                    }}
-                </div>
-            </span>
-        </div>
-    </template>
+    </span>
 </template>
 
 <style lang="scss" scoped></style>

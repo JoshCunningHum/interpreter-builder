@@ -47,13 +47,13 @@ export const useParserStore = defineStore("parser", () => {
         data?: ReturnType<typeof PrepareParser>;
     }>({});
 
+    const isRunning = ref(false);
     const isTesting = ref(false);
     watchImmediate(tokens, (tkns) => {
         if (!get(isTesting)) return;
 
         errorList.splice(0);
 
-        console.log(`Preparing Parser`);
         parserValues.data = PrepareParser({
             tokens: [...tkns],
             excludeTokens: [...exludedTokens.value],
@@ -75,28 +75,18 @@ export const useParserStore = defineStore("parser", () => {
                 });
             },
         });
-    });
 
-    const isRunning = ref(false);
-    watchImmediate(
-        parserValues,
-        (v) => {
-            if (!get(isTesting) || !v.data || isRunning.value) return;
-            isRunning.value = true;
-            produceAST(v.data);
-            new Promise((resolve) => {
-                if (!v.data) resolve(false);
-                else {
-                    console.log(`Producing AST`);
-                    const buffer = parserValues.data;
-                    produceAST(v.data);
-                    parserValues.data = buffer;
-                }
-                setTimeout(() => resolve(true), 50);
-            }).then(() => set(isRunning, false));
-        },
-        { deep: true },
-    );
+        new Promise((resolve) => {
+            if (!get(isTesting) || !parserValues.data || get(isRunning))
+                return resolve(false);
+
+            set(isRunning, true);
+            produceAST(parserValues.data);
+            parserValues.data = JSON.parse(JSON.stringify(parserValues.data));
+            set(isRunning, false);
+            resolve(true);
+        });
+    });
 
     const testLogs = computed(() => get(parserValues).data?.history || []);
 

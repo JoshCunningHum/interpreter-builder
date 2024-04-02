@@ -56,8 +56,9 @@ const ishovering = ref(false);
         </template>
         <div class="pl-6">
             <ObjectViewer
+                :expanded="false"
                 :obj="node.data"
-                :show-brackets="false"
+                pretext="data: "
             />
             <!-- <div
         class="text-neutral-400"

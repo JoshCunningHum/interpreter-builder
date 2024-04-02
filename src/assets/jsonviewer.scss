@@ -1,0 +1,76 @@
+// values are default one from jv-light template
+$bg: transparent;
+$color: #999999;
+$color_number: #ff0c65;
+
+.jv-cdark {
+    background: $bg;
+    white-space: nowrap;
+    color: $color;
+    font-size: 14px;
+    font-family: Consolas, Menlo, Courier, monospace;
+
+    .jv-ellipsis {
+        color: $color;
+        background: $bg;
+        display: inline-block;
+        line-height: 0.9;
+        font-size: 0.9em;
+        padding: 0px 4px 2px 4px;
+        border-radius: 3px;
+        vertical-align: 2px;
+        cursor: pointer;
+        user-select: none;
+    }
+    .jv-button {
+        color: #49b3ff;
+    }
+    .jv-key {
+        color: $color;
+    }
+    .jv-item {
+        &.jv-array {
+            color: $color;
+        }
+        &.jv-boolean {
+            color: $color_number;
+        }
+        &.jv-function {
+            color: #067bca;
+        }
+        &.jv-number {
+            color: $color_number;
+        }
+        &.jv-number-float {
+            color: $color_number;
+        }
+        &.jv-number-integer {
+            color: $color_number;
+        }
+        &.jv-object {
+            color: $color;
+        }
+        &.jv-undefined {
+            color: #e08331;
+        }
+        &.jv-string {
+            color: #42b983;
+            word-break: break-word;
+            white-space: normal;
+        }
+    }
+    .jv-code {
+        padding: 0;
+        .jv-toggle {
+            &:before {
+                padding: 0px 2px;
+                border-radius: 2px;
+            }
+            &:hover {
+                &:before {
+                    background: $bg;
+                }
+            }
+        }
+    }
+}

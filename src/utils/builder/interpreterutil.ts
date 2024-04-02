@@ -1,12 +1,14 @@
 import type { RuntimeVal } from "@/logic/values";
 import { ExecuteNode, type ExecuteNodeParams } from "@/types/Evals";
 import type { ASTNode } from "@/types/Node";
+import { isMatch } from "./parserutils";
 
 export const EvalFunctionBuilder = (
     params: ExecuteNodeParams,
+    execution_id: string,
     logs?: any[],
 ) => {
-    const { node, N } = params;
+    const { node, N, cpError, error: _error } = params;
 
     const template: RuntimeVal = {
         type: node.kind,
@@ -18,13 +20,39 @@ export const EvalFunctionBuilder = (
         template.type = "undefined";
         template.value = undefined;
     };
-    const error = (v: string) => (template.error = v);
+    const error = (v: string) => {
+        template.error = v;
+        _error(v, execution_id);
+    };
     const execute = async (node: ASTNode) => {
         return await ExecuteNode(Object.assign(params, { node }));
     };
-    const log = (...e: any[]) => {
+    const log = function (...e: any[]) {
         if (!logs) return;
         logs.push(...e);
+    };
+    const is = (v: RuntimeVal, type: string) => {
+        if (!("type" in v)) {
+            cpError(
+                new Error("non-runtime value passed on is() function"),
+                execution_id,
+            );
+
+            return false;
+        }
+        return v.type === type;
+    };
+    const awaitAll = async <V, T>(
+        arr: V[],
+        cb: (v: V, i: number, arr: V[]) => Promise<T>,
+    ) => {
+        const results: T[] = [];
+
+        for (let i = 0; i < arr.length; i++) {
+            results.push(await cb(arr[i], i, arr));
+        }
+
+        return results;
     };
     const children = node.body;
     const data = node.data;
@@ -41,5 +69,8 @@ export const EvalFunctionBuilder = (
         execute,
         error,
         log,
+        is,
+        awaitAll,
+        isMatch,
     };
 };

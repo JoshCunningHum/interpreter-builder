@@ -2,6 +2,12 @@ import type { ASTNode, ParseRule } from "@/types/Node";
 import type { ParsePoolItem } from "./parserutils";
 import { produceAST } from "@/logic/ast";
 
+type splitbycallback = (
+    item: ParsePoolItem,
+    index: number,
+    arry: ParsePoolItem[],
+) => boolean;
+
 export const ParseMapFunctionBuilder = (
     rule: ParseRule,
     pool: ParsePoolItem[],
@@ -36,6 +42,17 @@ export const ParseMapFunctionBuilder = (
     const data = () => result;
     const at = (n: number) => (n >= 0 && n < pool.length ? pool[n] : undefined);
     const log = (...params: any[]) => runtimeLog?.push(...params);
+    const splitBy = (array: ParsePoolItem[], isSplitter: splitbycallback) => {
+        return array.reduce((group, item, i) => {
+            if (group.length === 0) group.push([]);
+            const last = group[group.length - 1];
+
+            if (isSplitter(item, i, array)) group.push([]);
+            else last.push(item);
+
+            return group;
+        }, [] as ParsePoolItem[][]);
+    };
 
     return {
         result,
@@ -47,5 +64,6 @@ export const ParseMapFunctionBuilder = (
         data,
         at,
         log,
+        splitBy,
     };
 };

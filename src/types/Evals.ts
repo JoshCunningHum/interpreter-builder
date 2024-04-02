@@ -12,6 +12,7 @@ import {
 } from "@/utils/common";
 import genid from "@/utils/genid";
 import type { ASTNode } from "./Node";
+import type { PrepareGlobal } from "@/logic/environment";
 
 export interface EvalDef {
     id: number;
@@ -25,6 +26,7 @@ export interface EvalDefArgs extends ReturnType<typeof EvalFunctionBuilder> {
     isNum: typeof isNum;
     isString: typeof isString;
     isBoolean: typeof isBoolean;
+    glob: ReturnType<typeof PrepareGlobal>;
 }
 
 export interface ExecuteNodeParams
@@ -37,7 +39,7 @@ export interface ExecuteNodeParams
 export const ExecuteNode = async (
     params: ExecuteNodeParams,
 ): Promise<RuntimeVal> => {
-    const { node, defs, log, logs, cpError } = params;
+    const { node, defs, log, logs, cpError, glob } = params;
     const runtimeLog = Array<any>();
 
     const _execution_id = genid(16);
@@ -55,6 +57,7 @@ export const ExecuteNode = async (
                 error: _execution_id,
                 node,
                 log: runtimeLog,
+                global: glob,
             });
         }
 
@@ -62,12 +65,13 @@ export const ExecuteNode = async (
     }
 
     const args: EvalDefArgs = {
-        ...EvalFunctionBuilder(params, runtimeLog),
+        ...EvalFunctionBuilder(params, _execution_id, runtimeLog),
         hasProp,
         hasPropType,
         isNum,
         isString,
         isBoolean,
+        glob,
     };
 
     const buffer: { error?: string } = {
@@ -91,6 +95,7 @@ export const ExecuteNode = async (
                             template: args.template,
                         }),
                     ),
+                    global: glob,
                     node,
                     result,
                     rule: def,

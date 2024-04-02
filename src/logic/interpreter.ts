@@ -16,6 +16,7 @@ export type InterpretLog =
           };
           result: RuntimeVal;
           log?: any[];
+          global: Record<string, any>;
       }
     | {
           rule?: EvalDef;
@@ -24,6 +25,7 @@ export type InterpretLog =
           node: ASTNode;
           error: string;
           log?: any[];
+          global: Record<string, any>;
       };
 
 export const evaluateAST = async (

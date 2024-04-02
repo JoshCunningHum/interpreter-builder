@@ -3,10 +3,10 @@ export const __print_handler__ = (cb: (value: string) => void) => {
 };
 
 export const __error_handler__ = (
-    cb: (value: string, line: number, column: number) => void,
+    cb: (value: string, line: number, column: number, id?: string) => void,
 ) => {
     // TODO: Add a way to determine which line and column it got the error
-    return (value: string) => cb(value, 0, 0);
+    return (value: string, id: string = "") => cb(value, 0, 0, id);
 };
 
 export const __scan_handler__ = (

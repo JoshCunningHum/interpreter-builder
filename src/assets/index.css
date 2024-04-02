@@ -9,3 +9,8 @@
 .text-hint {
     @apply text-neutral-400;
 }
+
+/* Some buillshit */
+.q-field__control {
+    min-height: 0px !important;
+}

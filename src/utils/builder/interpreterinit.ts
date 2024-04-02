@@ -8,6 +8,7 @@ import {
 } from "./interpretertools";
 import type { RuntimeVal } from "@/logic/values";
 import type { InterpretLog } from "@/logic/interpreter";
+import type { PrepareGlobal, PrepareGlobalParams } from "@/logic/environment";
 
 export interface PrepareInterpreterOptions {
     onPrint: (msg: string) => void;
@@ -16,6 +17,7 @@ export interface PrepareInterpreterOptions {
     onEvalError: (e: Error, id?: string) => void;
     tree: ASTNode[];
     defs: EvalDef[];
+    glob: ReturnType<typeof PrepareGlobal>;
 }
 
 export const PrepareInterpreter = ({
@@ -24,6 +26,7 @@ export const PrepareInterpreter = ({
     onError,
     onEvalError,
     tree,
+    glob,
     defs,
 }: PrepareInterpreterOptions) => {
     const buffer: { last: RuntimeVal } = {
@@ -42,6 +45,7 @@ export const PrepareInterpreter = ({
 
     return {
         N,
+        glob,
         tree,
         defs,
         print,

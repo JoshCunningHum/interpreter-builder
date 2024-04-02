@@ -97,7 +97,10 @@ export interface RuleMapperArgs
     isNode: typeof isNode;
     isMatch: typeof isMatch;
 
-    parse: (items: ParsePoolItem[]) => ParsePoolItem[];
+    parse: (
+        items: ParsePoolItem[],
+        specificRules?: string[],
+    ) => ParsePoolItem[];
 }
 
 export const RuleMapperArgsBuilder = (
@@ -122,14 +125,21 @@ export const RuleMapperArgsBuilder = (
 
     const utils = ParseMapFunctionBuilder(rule, pool, runtimeLog);
 
-    const parse = (items: ParsePoolItem[]): ParsePoolItem[] => {
+    const parse = (
+        items: ParsePoolItem[],
+        specificRules?: string[],
+    ): ParsePoolItem[] => {
+        const _rules = specificRules
+            ? rules.filter((r) => specificRules.includes(r.name))
+            : rules;
+
         const result = produceAST({
             pool: items,
             T,
             TX,
             history,
             log,
-            rules,
+            rules: _rules,
             tokenDefs,
             onError,
             onEvalError,

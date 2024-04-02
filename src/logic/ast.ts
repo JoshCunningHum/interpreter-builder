@@ -233,7 +233,7 @@ export const produceAST = (
         const generatedNode = args.data();
 
         pool.splice(start, l, ...generatedNode);
-        return -(l - 1);
+        return offset - (l - 1);
     }, 0);
 
     if (log) {
@@ -255,6 +255,7 @@ export const produceAST = (
 };
 
 export const checkASTHealth = (pool: ParsePoolItem[]): boolean => {
+    if (!pool) return false;
     return !pool.some((item) => {
         if (!item) return true;
         if (isToken(item)) return false;

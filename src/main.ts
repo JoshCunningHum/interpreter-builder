@@ -1,29 +1,34 @@
-import { createApp } from 'vue'
-import { Quasar, Dialog } from 'quasar'
-import quasarIconSet from 'quasar/icon-set/mdi-v7'
-import { createPinia } from 'pinia'
+import { createApp } from "vue";
+import { Quasar, Dialog } from "quasar";
+import quasarIconSet from "quasar/icon-set/mdi-v7";
+import { createPinia } from "pinia";
+import JsonViewer from "vue3-json-viewer";
+
+// Import JsonViewer Theme
+import "vue3-json-viewer/dist/index.css";
+import "@/assets/jsonviewer.scss";
 
 // Import icon libraries
-import '@quasar/extras/roboto-font/roboto-font.css'
-import '@quasar/extras/mdi-v7/mdi-v7.css'
+import "@quasar/extras/roboto-font/roboto-font.css";
+import "@quasar/extras/mdi-v7/mdi-v7.css";
 
 // Import Quasar css
-import 'quasar/src/css/index.sass'
+import "quasar/src/css/index.sass";
 
 // Import Quasar Config
-import QuasarConfig from './quasar.config';
+import QuasarConfig from "./quasar.config";
 
-import './assets/index.css'
-import App from './App.vue'
+import "./assets/index.css";
+import App from "./App.vue";
 
-const app = createApp(App)
+const app = createApp(App);
 
-app.use(createPinia()).use(Quasar, {
+app.use(JsonViewer).use(createPinia()).use(Quasar, {
     plugins: {
-      Dialog
+        Dialog,
     }, // import Quasar plugins and add here
     iconSet: quasarIconSet,
-    config: QuasarConfig
+    config: QuasarConfig,
 
     /*
     config: {
@@ -37,6 +42,6 @@ app.use(createPinia()).use(Quasar, {
       // ..and many more (check Installation card on each Quasar component/directive/plugin)
     }
     */
-  })
+});
 
-app.mount('#app')
+app.mount("#app");

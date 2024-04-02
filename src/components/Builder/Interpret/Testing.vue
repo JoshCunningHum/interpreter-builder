@@ -14,6 +14,7 @@ import {
     watch,
 } from "vue";
 import Logs from "@/components/Builder/Interpret/TestView/Logs.vue";
+import Results from "./TestView/Results.vue";
 
 // Splitter
 const splitter_value = ref(50);
@@ -47,6 +48,7 @@ const mode = ref(0);
 
 // To determine whether we are testing or not
 onMounted(() => {
+    set(source, testSource.value);
     set(isTesting, true);
 });
 onUnmounted(() => {
@@ -104,6 +106,7 @@ onUnmounted(() => {
                 <div class="flex-grow">
                     <q-scroll-area class="h-full">
                         <Logs v-if="mode === Mode.Logs" />
+                        <Results v-else />
                     </q-scroll-area>
                 </div>
             </div>

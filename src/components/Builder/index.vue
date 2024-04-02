@@ -6,6 +6,9 @@ import Parse from "./Parse/index.vue";
 import Interpreter from "./Interpret/index.vue";
 import Reserves from "./Reserves/index.vue";
 import Globals from "./Globals/index.vue";
+import SyntaxMagic from "./Syntax/index.vue";
+import Optimization from "./Optimize/index.vue";
+import Preprocessors from "./Preprocessors/index.vue";
 import { get, set } from "@vueuse/core";
 
 const tab = ref("Tokens");
@@ -30,7 +33,22 @@ const tabs: Tab[] = [
         icon: "mdi-graph-outline",
         addAction: true,
         component: Parse,
-        children: [],
+        children: [
+            {
+                label: "Syntax Magic",
+                icon: "mdi-auto-fix",
+                addAction: true,
+                component: SyntaxMagic,
+                children: [],
+            },
+            {
+                label: "Optimization",
+                icon: "mdi-cog-clockwise",
+                addAction: true,
+                component: Optimization,
+                children: [],
+            },
+        ],
     },
     {
         label: "Interpret Code",
@@ -39,10 +57,17 @@ const tabs: Tab[] = [
         component: Interpreter,
         children: [
             {
-                label: "Globals",
+                label: "Environment",
                 icon: "mdi-web",
                 addAction: false,
                 component: Globals,
+                children: [],
+            },
+            {
+                label: "Pre processors",
+                icon: "mdi-playlist-check",
+                addAction: false,
+                component: Preprocessors,
                 children: [],
             },
         ],
