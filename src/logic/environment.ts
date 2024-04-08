@@ -2,11 +2,12 @@
 
 import { binder } from "@/utils/builder/globalutils";
 import { __undefined__ } from "./values";
+import type { ErrorHandlerCallbackFn } from "@/utils/builder/interpretertools";
 
 export interface PrepareGlobalParams {
     def: string;
     onEvalError: (e: Error) => void;
-    onError: (msg: string, line: number, column: number) => void;
+    onError: ErrorHandlerCallbackFn;
     onLog: (...args: any[]) => void;
 }
 

@@ -1,13 +1,17 @@
-import { type EvalDef } from "@/types/Evals";
-import { get, set, useStorage, watchImmediate } from "@vueuse/core";
-import { defineStore, acceptHMRUpdate, storeToRefs } from "pinia";
-import { computed, reactive, ref, toRefs, watch } from "vue";
-import { useParserStore } from "./parser";
 import { evaluateAST } from "@/logic/interpreter";
-import { PrepareInterpreter } from "@/utils/builder/interpreterinit";
+import { type EvalDef } from "@/types/Evals";
 import type { ASTNode } from "@/types/Node";
+import { PrepareInterpreter } from "@/utils/builder/interpreterinit";
 import { isNode } from "@/utils/builder/parserutils";
+import { get, set, useStorage, watchImmediate } from "@vueuse/core";
+import { acceptHMRUpdate, defineStore, storeToRefs } from "pinia";
+import { computed, reactive, ref, watch } from "vue";
 import { useGlobalStore } from "./global";
+import { useParserStore } from "./parser";
+import type {
+    ErrorHandlerCallbackFn,
+    ScanHandlerCallbackFn,
+} from "@/utils/builder/interpretertools";
 
 export const useInterpreterStore = defineStore("interpreter", () => {
     const evalDefs = useStorage(
@@ -31,32 +35,37 @@ export const useInterpreterStore = defineStore("interpreter", () => {
 
     const isTesting = ref(false);
     watchImmediate([parserValues, isTesting], () => {
-        globalStore.create_env();
-        const glob = glob_obj.value;
         const ast = parserValues.value;
 
+        // Do not continue if we are not testing or there is no AST yet
         if (!get(isTesting) || !ast) return;
 
+        // Prepare Callbacks
+        const onPrint = console.log;
+        const onScan: ScanHandlerCallbackFn = async (msg, answer) =>
+            answer(prompt(msg) || "");
+        const onError: ErrorHandlerCallbackFn = (msg, line, col, id = "") =>
+            errorLists.push({ id, e: new Error(msg), type: "Runtime" });
+        const onEvalError = (e: Error, id = "") =>
+            errorLists.push({ id, e, type: "Logic" });
+
+        // Prepare Global Environment
+        globalStore.create_env();
+        const glob = glob_obj.value;
+
+        // Prepare AST, make sure no tokens left
         const tree = ast.pool.filter((n): n is ASTNode => isNode(n));
 
+        // Reset states
         errorLists.splice(0);
-
         interpreterValues.data = undefined;
+
+        // Instantiate the interpreter runtime
         interpreterValues.data = PrepareInterpreter({
-            onPrint: console.log,
-            onScan: async (msg, answer) => answer(prompt(msg) || ""),
-            onError: (msg, line, col, id) => {
-                console.error(msg);
-                errorLists.push({
-                    id: id || "",
-                    e: new Error(msg),
-                    type: "Runtime",
-                });
-            },
-            onEvalError: (e, id = "") => {
-                console.error(e);
-                errorLists.push({ id, e, type: "Logic" });
-            },
+            onPrint,
+            onScan,
+            onError,
+            onEvalError,
             tree,
             defs: evalDefs.value,
             glob,

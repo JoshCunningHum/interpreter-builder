@@ -8,7 +8,7 @@ export const EvalFunctionBuilder = (
     execution_id: string,
     logs?: any[],
 ) => {
-    const { node, N, cpError, error: _error } = params;
+    const { node, N, cpError, error: _error, print, scan } = params;
 
     const template: RuntimeVal = {
         type: node.kind,
@@ -72,5 +72,7 @@ export const EvalFunctionBuilder = (
         is,
         awaitAll,
         isMatch,
+        print,
+        scan,
     };
 };
