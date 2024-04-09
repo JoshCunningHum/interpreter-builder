@@ -179,7 +179,10 @@ const modeIcons: Record<string, string> = {
                                 <div class="font-mono -tracking-widest">
                                     ({{
                                         meth.arguments
-                                            .map((a) => `${a.name}: ${a.type}`)
+                                            .map(
+                                                (a) =>
+                                                    `${a.name}${a.isOptional ? "?" : ""}: ${a.type}`,
+                                            )
                                             .join(", ")
                                     }}) => {{ meth.returnType }}
                                 </div>
@@ -213,6 +216,12 @@ const modeIcons: Record<string, string> = {
                                             <q-item-label
                                                 class="text-body1 text-slate-400"
                                             >
+                                                <q-badge
+                                                    v-if="arg.isOptional"
+                                                    color="amber-4"
+                                                    class="text-body2 text-dark mr-2"
+                                                    >Optional</q-badge
+                                                >
                                                 <q-badge
                                                     color="orange-8"
                                                     class="text-body2 text-dark"

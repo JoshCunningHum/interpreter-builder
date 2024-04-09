@@ -13,7 +13,13 @@ export const ParseMapFunctionBuilder = (
     pool: ParsePoolItem[],
     runtimeLog?: any[],
 ) => {
-    const result: ASTNode[] = [];
+    const result: ASTNode[] = [
+        {
+            kind: rule.name,
+            body: [],
+            data: {},
+        },
+    ];
 
     const setKind = (kind: string) => {
         result[0] = result[0] || { kind: kind };
@@ -33,12 +39,7 @@ export const ParseMapFunctionBuilder = (
         result.splice(0);
         result.push(...items);
     };
-    const range = (start: number, end: number) => {
-        const indexes = Array(end - start + 1)
-            .fill(0)
-            .map((_, i) => start + i);
-        return pool.filter((_, i) => indexes.includes(i));
-    };
+    const range = (start: number, end: number) => pool.slice(start, end + 1);
     const data = () => result;
     const at = (n: number) => (n >= 0 && n < pool.length ? pool[n] : undefined);
     const log = (...params: any[]) => runtimeLog?.push(...params);
