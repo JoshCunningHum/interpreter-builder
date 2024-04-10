@@ -14,3 +14,7 @@
 .q-field__control {
     min-height: 0px !important;
 }
+
+.cm-nolines .cm-gutters {
+    display: none !important;
+}

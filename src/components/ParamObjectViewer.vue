@@ -4,6 +4,7 @@ import { isStringIn } from "@/utils/isStringIn";
 import { get, useArrayFilter } from "@vueuse/core";
 import { computed, ref, toRefs } from "vue";
 import CMEditorJS from "./CMEditorJS.vue";
+import CMType from "./CMType.vue";
 
 export type PropertyType = {
     name: string;
@@ -28,7 +29,7 @@ export type MethodType = {
 export type InterfaceType = {
     name: string;
     description: string;
-    schema: Record<string, any>;
+    schema: string;
 };
 
 const props = withDefaults(
@@ -70,7 +71,7 @@ const properties = useArrayFilter(_properties, (m) => {
 const interfaces = useArrayFilter(_interfaces, (i) => {
     const s = get(search);
     if (!s) return true;
-    return isStringIn(s, [i.name, i.description]);
+    return isStringIn(s, [i.name, i.description, i.schema]);
 });
 
 enum Mode {
@@ -153,7 +154,6 @@ const modeIcons: Record<string, string> = {
 
         <q-tab-panels
             v-model="mode"
-            animated
             class="bg-neutral-800"
         >
             <!-- Methods -->
@@ -245,6 +245,7 @@ const modeIcons: Record<string, string> = {
                             </q-expansion-item>
                             <CMEditorJS
                                 disabled
+                                class="cm-nolines"
                                 v-model="meth.example"
                             />
                         </q-item-section>
@@ -277,6 +278,36 @@ const modeIcons: Record<string, string> = {
                                     {{ prop.description }}</span
                                 >
                             </q-item-label>
+                        </q-item-section>
+                    </q-item>
+                </q-list>
+            </q-tab-panel>
+            <!-- Interfaces -->
+            <q-tab-panel
+                :name="Mode[Mode.Types]"
+                v-if="!!interfaces && interfaces.length > 0"
+                class="p-0"
+            >
+                <q-list separator>
+                    <q-item
+                        v-for="(int, i) in interfaces"
+                        :key="i"
+                        class="py-3"
+                    >
+                        <q-item-section>
+                            <q-item-label class="text-body1 text-slate-400">
+                                <q-badge
+                                    color="orange-8"
+                                    class="text-body2 text-dark"
+                                    >{{ int.name }}</q-badge
+                                >
+                            </q-item-label>
+                            <q-item-label caption>
+                                <span class="text-body2">
+                                    {{ int.description }}</span
+                                >
+                            </q-item-label>
+                            <CMType v-model="int.schema" />
                         </q-item-section>
                     </q-item>
                 </q-list>

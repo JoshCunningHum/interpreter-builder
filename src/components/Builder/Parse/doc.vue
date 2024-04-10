@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import DocsContainer from "@/components/DocsContainer.vue";
 import ParamObjectViewer, {
+    type InterfaceType,
     type MethodType,
     type PropertyType,
 } from "@/components/ParamObjectViewer.vue";
@@ -226,7 +227,7 @@ findRGX(\`(\$\{NX.Type\}\$\{NX.Identifier\}(\$\{NX.Identifier\}\$\{NX.Comma\})*\
             },
         ],
         description: "An easier way to type the pool[index].",
-        example: "at(0 // Same as pool[0])",
+        example: "at(0) // Same as pool[0]",
         returnType: "ParsePoolItem",
     },
 ];
@@ -429,6 +430,31 @@ const map_methods: MethodType[] = [
     },
 ];
 
+const parser_types: InterfaceType[] = [
+    {
+        name: "ParsePoolItem",
+        description: "The items inside the pool object.",
+        schema: `type ParsePoolItem = ASTNode | Token`,
+    },
+    {
+        name: "ASTNode",
+        description: "The node object, the result of the mapper.",
+        schema: `interface ASTNode {
+    kind: string;
+    body: ParsePoolItem[];
+    data: Record<string, any>;
+}`,
+    },
+    {
+        name: "Token",
+        description: "The token object, result of the tokenizer.",
+        schema: `interface Token {
+    value: string;
+    type: number;
+}`,
+    },
+];
+
 enum Mode {
     Matcher,
     Mapper,
@@ -515,6 +541,7 @@ const methods = computed(() =>
         <ParamObjectViewer
             :properties="properties"
             :methods="methods"
+            :interfaces="parser_types"
         >
             <template #header>
                 <q-tabs
