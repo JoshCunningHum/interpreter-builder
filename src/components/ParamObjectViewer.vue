@@ -170,12 +170,19 @@ const modeIcons: Record<string, string> = {
                     >
                         <q-item-section>
                             <q-item-label class="text-body1 text-slate-400">
-                                <q-badge
-                                    color="orange-8"
-                                    class="text-body2 text-dark mb-1"
-                                    >{{ meth.name }}</q-badge
-                                >
-                                <br />
+                                <div class="flex gap-1">
+                                    <q-badge
+                                        v-if="meth.isAsync"
+                                        color="amber-7"
+                                        class="text-body2 text-dark mb-1"
+                                        label="async"
+                                    />
+                                    <q-badge
+                                        color="orange-8"
+                                        class="text-body2 text-dark mb-1"
+                                        >{{ meth.name }}</q-badge
+                                    >
+                                </div>
                                 <div class="font-mono -tracking-widest">
                                     ({{
                                         meth.arguments

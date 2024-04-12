@@ -7,6 +7,8 @@ import { storeToRefs } from "pinia";
 import { onActivated, ref } from "vue";
 import Editing from "./Editing.vue";
 import Testing from "./Testing.vue";
+import ProcessTabPanel from "@/components/ProcessTabPanel.vue";
+import Docs from "./docs.vue";
 
 const emit = defineEmits<{
     (e: "initializeAddHook", func: () => void): void;
@@ -49,12 +51,15 @@ const toggleCollapse = () => {
 </script>
 
 <template>
-    <div class="flex h-full flex-col gap-2">
+    <ProcessTabPanel>
         <ProcessTabTitle
             title="Evaluate Nodes"
             description="Create logic for each node type"
             io-key="EvalDefs"
         >
+            <template #docs>
+                <Docs />
+            </template>
             <template #actions>
                 <q-btn
                     v-show="mode === Mode.Editing"
@@ -78,7 +83,7 @@ const toggleCollapse = () => {
             @collapse-reset="collapseReset"
         />
         <Testing v-else />
-    </div>
+    </ProcessTabPanel>
 </template>
 
 <style lang="scss" scoped></style>

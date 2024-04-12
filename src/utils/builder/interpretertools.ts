@@ -18,9 +18,9 @@ export type ScanHandlerCallbackFn = (
     answer: (value: string) => void,
 ) => Promise<void>;
 export const __scan_handler__ = (onRequest: ScanHandlerCallbackFn) => {
-    return async (msg: string) => {
+    return async (msg?: string) => {
         return await new Promise<string>((resolve) => {
-            onRequest(msg, (answer) => resolve(answer));
+            onRequest(msg || "", (answer) => resolve(answer));
         });
     };
 };
