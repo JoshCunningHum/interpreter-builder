@@ -121,7 +121,7 @@ const reset = () => {
                     <q-btn
                         flat
                         label="Cancel"
-                        @click="showexportname = false"
+                        @click="showreset = false"
                     />
                     <q-btn
                         color="red"
