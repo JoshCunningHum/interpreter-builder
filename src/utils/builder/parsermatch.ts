@@ -150,7 +150,25 @@ export const ParseMatchFunctionsBuilder = (
         return [-1, 0];
     };
 
+    type splitbycallback = (
+        item: ParsePoolItem,
+        index: number,
+        arry: ParsePoolItem[],
+    ) => boolean;
+
     const log = (...params: any[]) => runtimeLog?.push(...params);
+    const range = (start: number, end: number) => pool.slice(start, end + 1);
+    const splitBy = (array: ParsePoolItem[], isSplitter: splitbycallback) => {
+        return array.reduce((group, item, i) => {
+            if (group.length === 0) group.push([]);
+            const last = group[group.length - 1];
+
+            if (isSplitter(item, i, array)) group.push([]);
+            else last.push(item);
+
+            return group;
+        }, [] as ParsePoolItem[][]);
+    };
 
     return {
         _rgx,
@@ -158,5 +176,7 @@ export const ParseMatchFunctionsBuilder = (
         findRGX,
         log,
         at: (n: number) => (n >= 0 && n < pool.length ? pool[n] : undefined),
+        range,
+        splitBy,
     };
 };

@@ -230,6 +230,45 @@ findRGX(\`(\$\{NX.Type\}\$\{NX.Identifier\}(\$\{NX.Identifier\}\$\{NX.Comma\})*\
         example: "at(0) // Same as pool[0]",
         returnType: "ParsePoolItem",
     },
+    {
+        name: "range",
+        arguments: [
+            {
+                name: "start",
+                type: "number",
+                description: "The start index of the range. Included.",
+            },
+            {
+                name: "end",
+                type: "number",
+                description: "The end index of the range. Included.",
+            },
+        ],
+        description: "Acts as pool.slice(start, end) but the end is included.",
+        example:
+            "// Gets all the matched items in the matcher\n// Except the first and the last\nrange(start + 1, end - 1)",
+        returnType: "ParsePoolItem[]",
+    },
+    {
+        name: "splitBy",
+        arguments: [
+            {
+                name: "array",
+                type: "ParsePoolItem[]",
+                description: "The array you want to split by",
+            },
+            {
+                name: "splitter",
+                type: "(item: ParsePoolItem, index: number) => boolean",
+                description:
+                    "The callback where you have to logically identify if an item should be a point to split",
+            },
+        ],
+        description:
+            "A function similar with string.split() however for the pool. It will group the splitted items within array. This can also be used as pool.filter() if you flat the result right after.",
+        example: `// Used in a declaration rule.\n// Splits all declarations by commas\nsplitBy(declarations, p => isMatch(p, T.Comma))`,
+        returnType: "ParsePoolItem[][]",
+    },
 ];
 
 const map_methods: MethodType[] = [
@@ -427,6 +466,33 @@ const map_methods: MethodType[] = [
             "A function similar with string.split() however for the pool. It will group the splitted items within array. This can also be used as pool.filter() if you flat the result right after.",
         example: `// Used in a declaration rule.\n// Splits all declarations by commas\nsplitBy(declarations, p => isMatch(p, T.Comma))`,
         returnType: "ParsePoolItem[][]",
+    },
+    {
+        name: "error",
+        arguments: [
+            {
+                name: "message",
+                type: "string",
+                description: "The error message",
+            },
+            {
+                name: "line",
+                type: "number",
+                description: "The error line number",
+                isOptional: true,
+            },
+            {
+                name: "column",
+                type: "number",
+                description: "The error column number",
+                isOptional: true,
+            },
+        ],
+        description:
+            "A function that halts the parser when called to. This also prints an error message on the output.",
+        example:
+            "error('Missing closing parentheses in the grouping expression')",
+        returnType: "void",
     },
 ];
 

@@ -123,7 +123,7 @@ export const RuleMapperArgsBuilder = (
 
     const { N } = NodeIdentifiers(pool);
 
-    const utils = ParseMapFunctionBuilder(rule, pool, runtimeLog);
+    const utils = ParseMapFunctionBuilder(params, rule, pool, runtimeLog);
 
     const parse = (
         items: ParsePoolItem[],

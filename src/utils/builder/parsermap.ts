@@ -1,6 +1,7 @@
 import type { ASTNode, ParseRule } from "@/types/Node";
 import type { ParsePoolItem } from "./parserutils";
 import { produceAST } from "@/logic/ast";
+import type { PrepareParser } from "./parseinit";
 
 type splitbycallback = (
     item: ParsePoolItem,
@@ -9,10 +10,13 @@ type splitbycallback = (
 ) => boolean;
 
 export const ParseMapFunctionBuilder = (
+    params: ReturnType<typeof PrepareParser>,
     rule: ParseRule,
     pool: ParsePoolItem[],
     runtimeLog?: any[],
 ) => {
+    const { onError } = params;
+
     const result: ASTNode[] = [
         {
             kind: rule.name,
@@ -54,6 +58,9 @@ export const ParseMapFunctionBuilder = (
             return group;
         }, [] as ParsePoolItem[][]);
     };
+    const error = (msg: string, line = -1, column = -1) => {
+        onError(msg, line, column);
+    };
 
     return {
         result,
@@ -66,5 +73,6 @@ export const ParseMapFunctionBuilder = (
         at,
         log,
         splitBy,
+        error,
     };
 };
