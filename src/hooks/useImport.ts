@@ -8,13 +8,14 @@ import { ref } from "vue";
 import type { IOCategories } from "./useExport";
 import { useInterpreterStore } from "@/stores/interpreter";
 import type { EvalDef } from "@/types/Evals";
+import { useGlobalStore } from "@/stores/global";
 
 const { open, reset, onChange } = useFileDialog({
     accept: "application/JSON",
 });
 const category = ref<IOCategories>();
 
-export const useImport = (type: IOCategories) => {
+export const useImport = (type: IOCategories | "all") => {
     set(category, type);
     open();
 };
@@ -35,18 +36,21 @@ onChange(async (files) => {
 });
 
 // Can be used to export interpreter specs individually or as a whole
-export const imp = (data: unknown, type: IOCategories): boolean => {
+export const imp = (data: unknown, type: IOCategories | "all"): boolean => {
     if (!isObject(data)) return false;
 
     const tokenStore = useTokenStore();
     const parserStore = useParserStore();
     const interpreterStore = useInterpreterStore();
+    const globalStore = useGlobalStore();
 
     const { reserves, tokens } = storeToRefs(tokenStore);
     const { exludedTokens, parseRules } = storeToRefs(parserStore);
     const { evalDefs } = storeToRefs(interpreterStore);
+    const { glob } = storeToRefs(globalStore);
 
     switch (type) {
+        case "all":
         case "ParseRules":
             if (!("exludedTokens" in data && "parseRules" in data))
                 return false;
@@ -76,7 +80,7 @@ export const imp = (data: unknown, type: IOCategories): boolean => {
                 get(exludedTokens).push(t);
             });
 
-            break;
+            if (type !== "all") break;
         case "ReserveWords":
             if (!("reserves" in data)) return false;
             if (!Array.isArray(data.reserves)) return false;
@@ -93,7 +97,7 @@ export const imp = (data: unknown, type: IOCategories): boolean => {
                 get(reserves).push(r as ReservedWord);
             });
 
-            break;
+            if (type !== "all") break;
         case "TokenDefinitions":
             if (!("tokens" in data)) return false;
             if (!Array.isArray(data.tokens)) return false;
@@ -110,7 +114,7 @@ export const imp = (data: unknown, type: IOCategories): boolean => {
                 get(tokens).push(t as TokenDef);
             });
 
-            break;
+            if (type !== "all") break;
         case "EvalDefs":
             if (!("evalDefs" in data)) return false;
             if (!Array.isArray(data.evalDefs)) return false;
@@ -127,7 +131,14 @@ export const imp = (data: unknown, type: IOCategories): boolean => {
                 get(evalDefs).push(d as EvalDef);
             });
 
-            break;
+            if (type !== "all") break;
+        case "Globals":
+            if (!("glob" in data)) return false;
+            if (typeof data.glob !== "string") return false;
+
+            // Import the global object
+            glob.value = data.glob;
+            if (type !== "all") break;
     }
 
     return true;
