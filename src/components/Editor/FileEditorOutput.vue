@@ -9,7 +9,7 @@ const { outputs } = storeToRefs(ideStore);
 
 <template>
     <div
-        class="bg-dark flex w-full content-start items-start justify-start p-2 font-mono"
+        class="bg-dark w-full content-start items-start justify-start p-2 font-mono"
     >
         <template
             v-for="(o, i) in outputs"
@@ -28,9 +28,9 @@ const { outputs } = storeToRefs(ideStore);
                 v-else
                 @submit="
                     (msg) => {
-                        o.answer(msg);
                         o.isScanning = false;
                         o.inputted = msg;
+                        o.answer(msg);
                     }
                 "
                 :scan="o.isScanning"
