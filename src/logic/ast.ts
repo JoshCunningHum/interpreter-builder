@@ -143,12 +143,15 @@ const DEV = false;
 // };
 
 // Rewrite of the parser processing into iterative Map every Match instead of Match all then Map all
-export const _produceAST = (
-    params: ReturnType<typeof PrepareParser>,
-): {
+export type ParseOutput = {
     pool: ParsePoolItem[];
     history?: ParseProcessLog[];
-} => {
+    error?: string;
+};
+
+export const produceAST = (
+    params: ReturnType<typeof PrepareParser>,
+): ParseOutput => {
     const {
         pool,
         rules,
@@ -161,23 +164,27 @@ export const _produceAST = (
         onEvalError,
     } = params;
 
-    const output = { pool, history };
+    const output: ParseOutput = { pool, history };
     let ruleindex = 0;
+    let hasError = false;
 
     // Loop through all rule definition
-    while (ruleindex < rules.length) {
+    while (!hasError && ruleindex < rules.length) {
         const rule = rules[ruleindex];
         const execution_id = genid(16);
 
-        const onError = (msg: string, line: number, column: number) =>
-            _onError(msg, line, column, execution_id);
+        const onError = (msg: string, line: number, column: number) => {
+            // Add a history error
+            output.error = msg;
+            return _onError(msg, line, column, execution_id);
+        };
 
         const runtimelog: any[] = [];
         const matches: [number, number][] = [];
 
         // Loop until there are no matches
         let MAX_LOOP = pool.length + 1; // infinite loop guard
-        while (MAX_LOOP--) {
+        while (!hasError && MAX_LOOP--) {
             const match_args = RuleMatchArgsBuilder(
                 {
                     history,
@@ -236,17 +243,6 @@ export const _produceAST = (
 
     return output;
 };
-
-export const produceAST = (
-    params: ReturnType<typeof PrepareParser>,
-
-    // Recursive Parameters
-    ruleIndex = 0,
-    MAX_RECURSION_GUARD = 100,
-): {
-    pool: ParsePoolItem[];
-    history?: ParseProcessLog[];
-} => _produceAST(params);
 
 export const checkASTHealth = (pool: ParsePoolItem[]): boolean => {
     if (!pool) return false;

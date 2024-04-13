@@ -1,9 +1,9 @@
+import { produceAST } from "@/logic/ast";
 import type { PrepareParser } from "@/utils/builder/parseinit";
 import { ParseMapFunctionBuilder } from "@/utils/builder/parsermap";
 import {
     NodeIdentifiers,
     ParseMatchFunctionsBuilder,
-    TokenIdentifiers,
 } from "@/utils/builder/parsermatch";
 import {
     isMatch,
@@ -11,8 +11,7 @@ import {
     isToken,
     type ParsePoolItem,
 } from "@/utils/builder/parserutils";
-import { type Token, type TokenDef } from "./Token";
-import { produceAST } from "@/logic/ast";
+import { type Token } from "./Token";
 
 const DEV = false;
 
@@ -75,7 +74,7 @@ export const RuleMatchArgsBuilder = (
         ...utils,
 
         // Essential Functions
-        error: (message: string, line = 0, column = 0) =>
+        error: (message: string, line = -1, column = -1) =>
             onError(message, line, column),
     };
 };
