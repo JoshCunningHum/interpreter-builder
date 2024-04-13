@@ -4,7 +4,7 @@ import { storeToRefs } from "pinia";
 import TimelineItem from "./TimelineItem.vue";
 
 const parseStore = useParserStore();
-const { testLogs, errorList } = storeToRefs(parseStore);
+const { testLogs, parserValues } = storeToRefs(parseStore);
 </script>
 
 <template>

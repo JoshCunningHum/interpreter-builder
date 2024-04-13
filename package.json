@@ -20,6 +20,7 @@
     "clipboard": "^2.0.11",
     "cm6-theme-material-dark": "^0.2.0",
     "codemirror": "^6.0.1",
+    "lezer": "^0.13.5",
     "pinia": "^2.1.7",
     "quasar": "^2.14.3",
     "thememirror": "^2.0.1",
