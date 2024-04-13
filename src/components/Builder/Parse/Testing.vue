@@ -24,7 +24,7 @@ const modes = getEnumKeys(Mode).map((mode, i) => ({
     value: i,
 }));
 
-const mode = ref(Mode.Process);
+const mode = ref(Mode.Json);
 
 // Test Source
 const parseStore = useParserStore();
