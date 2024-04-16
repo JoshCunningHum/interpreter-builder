@@ -21,6 +21,8 @@ const add = () => {
         id: genidnum(),
         type: -1,
         value: "",
+        line: -1,
+        col: -1,
     });
 };
 
