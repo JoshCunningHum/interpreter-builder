@@ -1,6 +1,8 @@
 export interface Token {
     value: string;
     type: number;
+    line: number;
+    col: number;
 }
 
 export interface TokenDef {
@@ -10,26 +12,37 @@ export interface TokenDef {
 }
 
 export interface ReservedWord extends Token {
-    id: number
+    id: number;
 }
 
 export interface TokenDefMatchArgs {
-    slice: string,
+    slice: string;
     whole: string;
 }
 
-export const TokenDefMatchArgsBuilder = (str: string, start: number): TokenDefMatchArgs => (<TokenDefMatchArgs>{ slice: str.slice(start), whole: str })
+export const TokenDefMatchArgsBuilder = (
+    str: string,
+    start: number,
+): TokenDefMatchArgs =>
+    <TokenDefMatchArgs>{ slice: str.slice(start), whole: str };
 
-export const RunTokenMatch = (def: TokenDef, args: TokenDefMatchArgs, handleError?: (e: any) => any): (string | number | undefined) => {
+export const RunTokenMatch = (
+    def: TokenDef,
+    args: TokenDefMatchArgs,
+    handleError?: (e: any) => any,
+): string | number | undefined => {
     try {
         return eval(def.match)(args) as number;
     } catch (e) {
         if (handleError) return handleError(e);
     }
-}
+};
 
 // Utility Functions
 
-export const GetTokenDef = (token: Token, tokenDefs: TokenDef[]): TokenDef | undefined => {
-    return tokenDefs.find(def => def.id === token.type);
-}
+export const GetTokenDef = (
+    token: Token,
+    tokenDefs: TokenDef[],
+): TokenDef | undefined => {
+    return tokenDefs.find((def) => def.id === token.type);
+};

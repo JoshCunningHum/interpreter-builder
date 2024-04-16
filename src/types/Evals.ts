@@ -74,37 +74,31 @@ export const ExecuteNode = async (
         glob,
     };
 
-    const buffer: { error?: string } = {
-        error: undefined,
+    const buffer: InterpretLog = {
+        global: log ? JSON.parse(JSON.stringify(glob)) : {},
+        node,
+        result: __undefined__,
+        rule: def,
+        args: log
+            ? JSON.parse(
+                  JSON.stringify({
+                      children: args.children,
+                      data: args.data,
+                      N: args.N,
+                      template: args.template,
+                  }),
+              )
+            : {},
+        error: "",
     };
+    logs.push(buffer);
 
     const result = await RunEvalDefLogic(def, args, (e) => {
         buffer.error = _execution_id;
         cpError(e, _execution_id);
     });
 
-    if (log) {
-        logs.push(
-            Object.assign(
-                {
-                    args: JSON.parse(
-                        JSON.stringify({
-                            children: args.children,
-                            data: args.data,
-                            N: args.N,
-                            template: args.template,
-                        }),
-                    ),
-                    global: glob,
-                    node,
-                    result,
-                    rule: def,
-                    log: runtimeLog,
-                },
-                buffer,
-            ),
-        );
-    }
+    if (log) buffer.result = result;
 
     return result;
 };

@@ -3,11 +3,32 @@ import type { Token, TokenDef, TokenDefMatchArgs } from "@/types/Token";
 import isAlpha from "@/utils/isAlpha";
 import { storeToRefs } from "pinia";
 
-const token = (matchLength: number, def: TokenDef, source: string) => {
+const token = (
+    matchLength: number,
+    def: TokenDef,
+    args: TokenDefMatchArgs,
+    start: number,
+) => {
+    const { whole, slice: source } = args;
+    const [line, col] = tokenloc(whole, start);
+
     return <Token>{
         type: def.id,
         value: source.slice(0, matchLength),
+        line,
+        col,
     };
+};
+
+const tokenloc = (source: string, start: number) => {
+    const before = source.slice(0, start);
+
+    const line = before.split("\n").length;
+
+    const nearest_endline = before.lastIndexOf("\n");
+    const col = start - (nearest_endline === -1 ? 0 : nearest_endline);
+
+    return [line, col];
 };
 
 export const tokenize = (source: string): Token[] => {
@@ -40,7 +61,7 @@ export const tokenize = (source: string): Token[] => {
             const rmDef = definitions.find((def) => def.id === rmType);
 
             if (!!rmDef) {
-                tokens.push(token(rmValue.length, rmDef, args.slice));
+                tokens.push(token(rmValue.length, rmDef, args, i));
                 i += rmValue.length - 1;
                 continue;
             }
@@ -63,7 +84,7 @@ export const tokenize = (source: string): Token[] => {
         // Add the first result in the tokens array
         const [length] = matches[0];
 
-        tokens.push(token(...matches[0], args.slice));
+        tokens.push(token(...matches[0], args, i));
         i += length - 1;
     }
 

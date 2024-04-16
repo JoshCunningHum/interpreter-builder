@@ -9,9 +9,7 @@ import CenterContent from "@/components/CenterContent.vue";
 const interpretStore = useInterpreterStore();
 const { interpreterValues } = storeToRefs(interpretStore);
 
-const logs = computed(() =>
-    [...(get(interpreterValues)?.logs || [])].reverse(),
-);
+const logs = computed(() => get(interpreterValues)?.logs || []);
 </script>
 
 <template>

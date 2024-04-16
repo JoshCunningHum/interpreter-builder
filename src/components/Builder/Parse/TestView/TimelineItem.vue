@@ -1,15 +1,22 @@
 <script setup lang="ts">
-import { type ParseProcessLog } from "@/stores/parser";
+import { useParserStore, type ParseProcessLog } from "@/stores/parser";
 import Json from "@/components/TreeViewer/Json.vue";
 import { computed, ref } from "vue";
 import { checkASTHealth } from "@/logic/ast";
-import { useElementHover } from "@vueuse/core";
+import { useArrayFind, useArraySome, useElementHover } from "@vueuse/core";
+import { storeToRefs } from "pinia";
 
 const { log } = defineProps<{
     log: ParseProcessLog;
 }>();
 
+const parserStore = useParserStore();
+
+const { id } = log;
+const { errorList } = storeToRefs(parserStore);
+
 const { matches, pool, rule, ruleIndex } = log;
+const error = useArrayFind(errorList, (e) => e.id === id);
 
 const isHealthy = computed(() => checkASTHealth(log.pool));
 
@@ -36,7 +43,7 @@ const ishovering = ref(false);
                 <div
                     class="text-overline flex w-4 items-center justify-center text-lg"
                 >
-                    <span v-if="isHealthy">{{ ruleIndex }}</span>
+                    <span v-if="isHealthy && !error">{{ ruleIndex }}</span>
                     <q-icon
                         v-else
                         name="mdi-alert"

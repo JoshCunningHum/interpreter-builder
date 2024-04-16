@@ -517,6 +517,8 @@ const parser_types: InterfaceType[] = [
         schema: `interface Token {
     value: string;
     type: number;
+    line: number;
+    col: number;
 }`,
     },
 ];

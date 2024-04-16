@@ -43,7 +43,7 @@ const isExpanded = ref(false);
                 />
                 <span
                     v-else-if="rule"
-                    class="font-bold"
+                    class="w-4 text-center font-bold"
                     >{{ index }}
                 </span>
             </q-item-section>

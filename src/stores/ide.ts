@@ -55,7 +55,14 @@ export const useIdeStore = defineStore("ide", () => {
     };
 
     const onError = (msg: string, line: number, column: number) => {
-        taskcontroller.abort("");
+        taskcontroller.abort(msg);
+        // const code = source.value;
+
+        // if (line > -1 && column > -1 && code) {
+        //     const codeline = code.split("\n")[line - 1];
+        //     msg = `${codeline}${" ".repeat(column - 1)}^\n${msg}`;
+        // }
+
         outputs.value.push({
             error: msg,
             type: "runtime",
