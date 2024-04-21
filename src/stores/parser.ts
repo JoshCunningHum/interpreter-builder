@@ -69,7 +69,7 @@ export const useParserStore = defineStore("parser", () => {
                 });
             },
             onEvalError: (e, type, id = "") => {
-                console.error(e);
+                console.error(e, type);
                 errorList.push({
                     id,
                     e,

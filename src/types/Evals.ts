@@ -91,7 +91,6 @@ export const ExecuteNode = async (
             : {},
         error: "",
     };
-    logs.push(buffer);
 
     const result = await RunEvalDefLogic(def, args, (e) => {
         buffer.error = _execution_id;
@@ -99,6 +98,7 @@ export const ExecuteNode = async (
     });
 
     if (log) buffer.result = result;
+    logs.push(buffer);
 
     return result;
 };

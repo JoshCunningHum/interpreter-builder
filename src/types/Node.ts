@@ -141,7 +141,13 @@ export const RuleMapperArgsBuilder = (
             rules: _rules,
             tokenDefs,
             onError,
-            onEvalError,
+            onEvalError: (
+                e: Error,
+                type: "match" | "map" | "other",
+                id?: string,
+            ) => {
+                onEvalError(e, type, id);
+            },
         }).pool;
 
         return result;

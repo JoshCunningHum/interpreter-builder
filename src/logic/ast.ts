@@ -218,9 +218,10 @@ export const produceAST = (
                 runtimelog,
             );
 
-            RunParseMapper(rule, map_args, (e) =>
-                onEvalError(e, "map", execution_id),
-            );
+            RunParseMapper(rule, map_args, (e) => {
+                console.log(`%c${rule.name} - ${rule.id}`, "color: red");
+                return onEvalError(e, "map", execution_id);
+            });
 
             const map_result = map_args.data();
 
