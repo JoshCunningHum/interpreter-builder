@@ -15,6 +15,7 @@ export interface PrepareParserOptions {
     rules: ParseRule[];
     tokenDefs: TokenDef[];
     excludeTokens: number[];
+    source: string,
     // Logging
     log?: boolean;
 }
@@ -27,6 +28,7 @@ export const PrepareParser = ({
     log,
     onError,
     onEvalError,
+    source,
 }: PrepareParserOptions) => {
     const history: ParseProcessLog[] = [];
 
@@ -50,5 +52,6 @@ export const PrepareParser = ({
         // Callbacks
         onError,
         onEvalError,
+        source
     };
 };

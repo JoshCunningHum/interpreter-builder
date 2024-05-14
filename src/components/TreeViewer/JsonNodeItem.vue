@@ -31,7 +31,7 @@ const ishovering = ref(false);
                 @mouseleave="ishovering = false"
             >
                 <div class="flex gap-1">
-                    <span class="font-mono font-bold text-teal-500">EXPR</span>
+                    <span class="font-mono font-bold text-teal-500">NODE</span>
                     <span class="text-neutral-300">{{ node.kind }}</span>
                 </div>
                 <div>

@@ -118,6 +118,7 @@ export const RuleMapperArgsBuilder = (
         onEvalError,
         rules,
         tokenDefs,
+        source,
     } = params;
 
     const { N } = NodeIdentifiers(pool);
@@ -148,6 +149,7 @@ export const RuleMapperArgsBuilder = (
             ) => {
                 onEvalError(e, type, id);
             },
+            source,
         }).pool;
 
         return result;

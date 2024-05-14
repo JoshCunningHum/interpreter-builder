@@ -61,7 +61,7 @@ export const useParserStore = defineStore("parser", () => {
             tokenDefs: [...tokenStore.tokens],
             log: true,
             onError: (msg, line, col, id = "") => {
-                console.error(msg);
+                console.error(msg, line, col);
                 errorList.push({
                     id,
                     e: new Error(msg),
@@ -76,6 +76,7 @@ export const useParserStore = defineStore("parser", () => {
                     type,
                 });
             },
+            source: testSource.value,
         });
 
         new Promise((resolve) => {

@@ -10,7 +10,8 @@ export type ErrorHandlerCallbackFn = (
 ) => void;
 export const __error_handler__ = (cb: ErrorHandlerCallbackFn) => {
     // TODO: Add a way to determine which line and column it got the error
-    return (value: string, id: string = "") => cb(value, 0, 0, id);
+    return (value: string, id: string = "", line = -1, col = -1) =>
+        cb(value, line, col, id);
 };
 
 export type ScanHandlerCallbackFn = (

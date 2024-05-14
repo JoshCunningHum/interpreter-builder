@@ -161,7 +161,8 @@ export const produceAST = (
         T,
         TX,
         onError: _onError,
-        onEvalError,
+        onEvalError: _onEvalError,
+        source,
     } = params;
 
     const output: ParseOutput = { pool, history };
@@ -177,6 +178,15 @@ export const produceAST = (
             // Add a history error
             output.error = msg;
             return _onError(msg, line, column, execution_id);
+        };
+
+        const onEvalError = (
+            e: Error,
+            type: "match" | "map" | "other",
+            id?: string,
+        ) => {
+            // Modify message of the error
+            e.message = `[ParseRule.${rule.name}]: ${e.message}`;
         };
 
         const runtimelog: any[] = [];
@@ -196,6 +206,7 @@ export const produceAST = (
                     onEvalError,
                     pool,
                     onError,
+                    source,
                 },
                 runtimelog,
             );

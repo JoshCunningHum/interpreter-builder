@@ -20,9 +20,9 @@ export const EvalFunctionBuilder = (
         template.type = "undefined";
         template.value = undefined;
     };
-    const error = (v: string) => {
+    const error = (v: string, line = -1, col = -1) => {
         template.error = v;
-        _error(v, execution_id);
+        _error(v, execution_id, line, col);
     };
     const execute = async (node: ASTNode) => {
         return await ExecuteNode(Object.assign(params, { node }));

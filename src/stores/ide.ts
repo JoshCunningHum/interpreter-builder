@@ -56,12 +56,12 @@ export const useIdeStore = defineStore("ide", () => {
 
     const onError = (msg: string, line: number, column: number) => {
         taskcontroller.abort(msg);
-        // const code = source.value;
+        const code = source.value;
 
-        // if (line > -1 && column > -1 && code) {
-        //     const codeline = code.split("\n")[line - 1];
-        //     msg = `${codeline}${" ".repeat(column - 1)}^\n${msg}`;
-        // }
+        if (line > -1 && column > -1 && code) {
+            const codeline = code.split("\n")[line - 1];
+            msg = ` ${msg}\n${line}|${codeline}\n${"-".repeat(column + String(line).length)}^\n`;
+        }
 
         outputs.value.push({
             error: msg,
@@ -71,6 +71,8 @@ export const useIdeStore = defineStore("ide", () => {
 
     const onEvalError = (e: Error) => {
         taskcontroller.abort("");
+        // @ts-expect-error Will actuallyl print a line number if on mozilla
+        console.error(e, e.lineNumber, e.columnNumber);
         outputs.value.push({
             error: e.message,
             type: "eval",
@@ -129,15 +131,17 @@ export const useIdeStore = defineStore("ide", () => {
                 onEvalError,
                 rules: parseRules.value,
                 tokenDefs: tokenDefs.value,
+                source: source.value || "",
             });
             const ast = produceAST(parser).pool as ASTNode[];
-            // Interpreter
+            // Environment
             const global = PrepareGlobal({
                 def: glob.value,
                 onError,
                 onEvalError,
                 onLog: console.log,
             });
+            // Interpreter
             const runtime = PrepareInterpreter({
                 defs: evalDefs.value,
                 glob: global,

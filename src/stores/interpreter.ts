@@ -29,9 +29,7 @@ export const useInterpreterStore = defineStore("interpreter", () => {
     const errorLists = reactive<
         { id: string; e: Error; type: "Runtime" | "Logic" }[]
     >([]);
-    const interpreterValues = reactive<{
-        data?: ReturnType<typeof PrepareInterpreter>;
-    }>({});
+    const interpreterValues = ref<ReturnType<typeof PrepareInterpreter>>();
 
     const isTesting = ref(false);
     watchImmediate([parserValues, isTesting], () => {
@@ -58,10 +56,10 @@ export const useInterpreterStore = defineStore("interpreter", () => {
 
         // Reset states
         errorLists.splice(0);
-        interpreterValues.data = undefined;
+        interpreterValues.value = undefined;
 
         // Instantiate the interpreter runtime
-        interpreterValues.data = PrepareInterpreter({
+        interpreterValues.value = PrepareInterpreter({
             onPrint,
             onScan,
             onError,
@@ -75,11 +73,11 @@ export const useInterpreterStore = defineStore("interpreter", () => {
     const isRunning = ref(false);
     watchImmediate(interpreterValues, (v) => {
         if (!get(isTesting)) return;
-        if (get(isRunning) || !v.data) return;
+        if (get(isRunning) || !v) return;
         set(isRunning, true);
-        evaluateAST(v.data, true).then(() => {
-            const buffer = interpreterValues.data;
-            interpreterValues.data = buffer;
+        evaluateAST(v, true).then(() => {
+            const buffer = interpreterValues.value;
+            interpreterValues.value = buffer;
             set(isRunning, false);
         });
     });
@@ -92,7 +90,7 @@ export const useInterpreterStore = defineStore("interpreter", () => {
         isTesting,
         evalDefs,
         errorLists,
-        interpreterValues: computed(() => interpreterValues.data),
+        interpreterValues,
     };
 });
 

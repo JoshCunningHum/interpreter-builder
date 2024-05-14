@@ -39,7 +39,15 @@ export interface ExecuteNodeParams
 export const ExecuteNode = async (
     params: ExecuteNodeParams,
 ): Promise<RuntimeVal> => {
-    const { node, defs, log, logs, cpError, glob } = params;
+    const { node, defs, log, logs, cpError: _cpError, glob } = params;
+
+    const cpError = (e: Error, id?: string) => {
+        // Modify message basedo on the node passed
+        e.message = `[EvalRule.${node.kind}] ${e.message}`;
+
+        return _cpError(e, id);
+    };
+
     const runtimeLog = Array<any>();
 
     const _execution_id = genid(16);
@@ -91,6 +99,7 @@ export const ExecuteNode = async (
             : {},
         error: "",
     };
+    logs.push(buffer);
 
     const result = await RunEvalDefLogic(def, args, (e) => {
         buffer.error = _execution_id;
@@ -98,7 +107,6 @@ export const ExecuteNode = async (
     });
 
     if (log) buffer.result = result;
-    logs.push(buffer);
 
     return result;
 };
